@@ -6,4 +6,6 @@ package io.github.nnkwrik.kirinrpc.demo.api;
  */
 public interface HelloWorldService {
     String sayHello(String name);
+
+    String sayWorld(String name);
 }

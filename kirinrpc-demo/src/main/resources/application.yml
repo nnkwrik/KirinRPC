@@ -1,0 +1,10 @@
+#kirin:
+#  provider:
+#    enable: true
+#    name: provider-demo
+#    registry:
+#      type: abcReg
+#      address: 192.168.0.5:2181
+#    protocol:
+#      type: protobuf
+#      port: 7070
