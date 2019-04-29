@@ -32,7 +32,7 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>kirinrpc-all</artifactId>
+            <artifactId>kirin-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

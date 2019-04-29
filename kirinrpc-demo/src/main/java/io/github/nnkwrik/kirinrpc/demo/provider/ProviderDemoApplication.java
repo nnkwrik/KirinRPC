@@ -1,17 +1,11 @@
 package io.github.nnkwrik.kirinrpc.demo.provider;
 
-import io.github.nnkwrik.kirinrpc.init.common.ProtocolType;
-import io.github.nnkwrik.kirinrpc.init.common.RegistryType;
-import io.github.nnkwrik.kirinrpc.init.springboot.annotation.KirinProvider;
+import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@KirinProvider(name = "provider-demo",
-        registryType = RegistryType.zookeeper,
-        registryAddress = "192.168.0.5:2181",
-        protocolType = ProtocolType.protobuf,
-        protocolPort = "7070")
+@KirinProvider(registryAddress = "127.0.0.1:2181")
 public class ProviderDemoApplication {
 
     public static void main(String[] args) {

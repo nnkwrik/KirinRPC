@@ -1,4 +1,7 @@
-package io.github.nnkwrik.kirinrpc.init.springboot.annotation;
+package io.github.nnkwrik.kirinrpc.springboot.annotation;
+
+import io.github.nnkwrik.kirinrpc.common.Constants;
+import org.springframework.stereotype.Component;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,6 +14,9 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Component
 public @interface KirinProviderService {
-    String id() default "";
+
+    String group() default Constants.ANY_GROUP;
+
 }

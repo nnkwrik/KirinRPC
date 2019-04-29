@@ -1,7 +1,7 @@
 package io.github.nnkwrik.kirinrpc.demo.provider;
 
 import io.github.nnkwrik.kirinrpc.demo.api.HelloWorldService;
-import io.github.nnkwrik.kirinrpc.init.springboot.annotation.KirinProviderService;
+import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
 
 /**
  * @author nnkwrik
