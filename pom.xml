@@ -13,6 +13,9 @@
         <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
         <curator.version>2.9.1</curator.version>
         <zookeeper.version>3.4.6</zookeeper.version>
+        <protobuf.versoin>3.6.1</protobuf.versoin>
+        <protostuff.versoin>1.6.0</protostuff.versoin>
+        <objenesis.versoin>3.0.1</objenesis.versoin>
     </properties>
 
     <dependencyManagement>
@@ -34,7 +37,6 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
@@ -56,6 +58,32 @@
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
             <version>${curator.version}</version>
+        </dependency>
+
+        <!--netty 相关-->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.versoin}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.protostuff</groupId>
+            <artifactId>protostuff-core</artifactId>
+            <version>${protostuff.versoin}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.protostuff</groupId>
+            <artifactId>protostuff-runtime</artifactId>
+            <version>${protostuff.versoin}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.objenesis</groupId>
+            <artifactId>objenesis</artifactId>
+            <version>${objenesis.versoin}</version>
         </dependency>
 
         <!--其他-->

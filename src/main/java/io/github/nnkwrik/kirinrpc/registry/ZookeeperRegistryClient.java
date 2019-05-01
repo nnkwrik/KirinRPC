@@ -101,7 +101,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
     }
 
     private void createNode(final RegisterMeta meta) {
-        String directory = String.format("/kirinrpc/%s/provider/%s",
+        String directory = String.format("/kirinrpc/%s/%s",
                 meta.getServiceMeta().getServiceGroup(),
                 meta.getServiceMeta().getServiceName());
 

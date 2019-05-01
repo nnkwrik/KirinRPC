@@ -1,7 +1,7 @@
 package io.github.nnkwrik.kirinrpc.springboot;
 
 import io.github.nnkwrik.kirinrpc.common.util.NetUtils;
-import io.github.nnkwrik.kirinrpc.netty.KirinNettyServer;
+import io.github.nnkwrik.kirinrpc.netty.KirinNettyServerAcceptor;
 import io.github.nnkwrik.kirinrpc.registry.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
 import io.github.nnkwrik.kirinrpc.registry.ZookeeperRegistryClient;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.net.*;
 import java.util.*;
@@ -31,7 +30,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
     private ProviderConfiguration providerConfig;
     private Map<RegisterMeta.ServiceMeta, Object> serviceMap = new HashMap<>();
     private RegistryClient registryClient;
-    private KirinNettyServer nettyServer;
+    private KirinNettyServerAcceptor nettyServerAcceptor;
     private InetSocketAddress serverAddress;
 
     @Override
@@ -77,8 +76,8 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
     }
 
     private void initServer() {
-        nettyServer = new KirinNettyServer(providerConfig.getServerPort());
-        nettyServer.init();
+        nettyServerAcceptor = new KirinNettyServerAcceptor(providerConfig.getServerPort());
+        nettyServerAcceptor.init();
     }
 
     public InetSocketAddress findServerAddress(ProviderConfiguration providerConfig) {
