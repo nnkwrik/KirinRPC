@@ -8,7 +8,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 如果60秒没有收到心跳包，则抛出异常。TODO 应该断开连接就行了
+ * 如果60秒没有收到心跳包，则抛出异常
  * @author nnkwrik
  * @date 19/04/30 9:27
  */

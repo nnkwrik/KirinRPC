@@ -8,26 +8,16 @@ import io.github.nnkwrik.kirinrpc.serializer.Serializer;
  * @author nnkwrik
  * @date 19/05/01 9:47
  */
-public class KirinRequestHolder {
+public class PayloadHolder {
 
     //status,id,timestamp
 
-    private byte status;
     private long id;
     private byte[] bytes;
     private Serializer serializer;
 
-    public KirinRequestHolder(long id, byte status) {
+    public PayloadHolder(long id) {
         this.id = id;
-        this.status = status;
-    }
-
-    public byte status() {
-        return status;
-    }
-
-    public void status(byte status) {
-        this.status = status;
     }
 
     public long id() {
@@ -50,5 +40,6 @@ public class KirinRequestHolder {
     public Serializer serializer() {
         return serializer;
     }
+
 
 }

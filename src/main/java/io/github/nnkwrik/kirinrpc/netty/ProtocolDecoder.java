@@ -1,7 +1,8 @@
 package io.github.nnkwrik.kirinrpc.netty;
 
-import io.github.nnkwrik.kirinrpc.netty.protocol.KirinRequestHolder;
 import io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader;
+import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayloadHolder;
+import io.github.nnkwrik.kirinrpc.netty.protocol.ResponsePayloadHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
@@ -55,13 +56,23 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
                         byte[] bytes = new byte[header.bodyLength()];
                         in.readBytes(bytes);
 
-                        KirinRequestHolder requestHolder = new KirinRequestHolder(header.id(), header.status());
+                        RequestPayloadHolder requestHolder = new RequestPayloadHolder(header.id());
+                        requestHolder.timestamp(System.currentTimeMillis());
                         requestHolder.bytes(bytes, serializerImpl());
                         out.add(requestHolder);
 
                         break;
                     }
-//                  case RESPONSE:
+                    case RESPONSE: {
+                        byte[] bytes = new byte[header.bodyLength()];
+                        in.readBytes(bytes);
+
+                        ResponsePayloadHolder responseHolder = new ResponsePayloadHolder(header.id());
+                        responseHolder.status(header.status());
+                        responseHolder.bytes(bytes, serializerImpl());
+                        out.add(responseHolder);
+                    }
+
                     default:
                         throw new IllegalAccessException();
                 }
