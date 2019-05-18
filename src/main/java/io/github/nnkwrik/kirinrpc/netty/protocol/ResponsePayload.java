@@ -4,12 +4,12 @@ package io.github.nnkwrik.kirinrpc.netty.protocol;
  * @author nnkwrik
  * @date 19/05/01 10:17
  */
-public class ResponsePayloadHolder extends PayloadHolder {
+public class ResponsePayload extends PayloadHolder {
 
 
     private byte status;
 
-    public ResponsePayloadHolder(long id) {
+    public ResponsePayload(long id) {
         super(id);
     }
 

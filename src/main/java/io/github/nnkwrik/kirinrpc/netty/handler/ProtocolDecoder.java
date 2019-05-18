@@ -1,8 +1,8 @@
-package io.github.nnkwrik.kirinrpc.netty;
+package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader;
-import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayloadHolder;
-import io.github.nnkwrik.kirinrpc.netty.protocol.ResponsePayloadHolder;
+import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.protocol.ResponsePayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
@@ -56,7 +56,7 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
                         byte[] bytes = new byte[header.bodyLength()];
                         in.readBytes(bytes);
 
-                        RequestPayloadHolder requestHolder = new RequestPayloadHolder(header.id());
+                        RequestPayload requestHolder = new RequestPayload(header.id());
                         requestHolder.timestamp(System.currentTimeMillis());
                         requestHolder.bytes(bytes, serializerImpl());
                         out.add(requestHolder);
@@ -67,7 +67,7 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
                         byte[] bytes = new byte[header.bodyLength()];
                         in.readBytes(bytes);
 
-                        ResponsePayloadHolder responseHolder = new ResponsePayloadHolder(header.id());
+                        ResponsePayload responseHolder = new ResponsePayload(header.id());
                         responseHolder.status(header.status());
                         responseHolder.bytes(bytes, serializerImpl());
                         out.add(responseHolder);

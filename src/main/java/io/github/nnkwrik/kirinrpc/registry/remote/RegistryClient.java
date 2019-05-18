@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.registry;
+package io.github.nnkwrik.kirinrpc.registry.remote;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.registry;
+package io.github.nnkwrik.kirinrpc.registry.remote;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;

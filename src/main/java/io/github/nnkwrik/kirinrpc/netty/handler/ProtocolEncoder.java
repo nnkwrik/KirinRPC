@@ -1,10 +1,11 @@
-package io.github.nnkwrik.kirinrpc.netty;
+package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.github.nnkwrik.kirinrpc.netty.protocol.PayloadHolder;
 import io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader;
-import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayloadHolder;
-import io.github.nnkwrik.kirinrpc.netty.protocol.ResponsePayloadHolder;
+import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.protocol.ResponsePayload;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
@@ -13,20 +14,21 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * @author nnkwrik
  * @date 19/05/01 10:08
  */
+@ChannelHandler.Sharable
 public class ProtocolEncoder extends MessageToByteEncoder<PayloadHolder> {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, PayloadHolder msg, ByteBuf out) throws Exception {
-        if (msg instanceof RequestPayloadHolder) {
-            doEncodeRequest((RequestPayloadHolder) msg, out);
-        } else if (msg instanceof ResponsePayloadHolder) {
-            doEncodeResponse((ResponsePayloadHolder) msg, out);
+        if (msg instanceof RequestPayload) {
+            doEncodeRequest((RequestPayload) msg, out);
+        } else if (msg instanceof ResponsePayload) {
+            doEncodeResponse((ResponsePayload) msg, out);
         } else {
             throw new IllegalArgumentException(msg.getClass().getSimpleName());
         }
 
     }
 
-    private void doEncodeRequest(RequestPayloadHolder msg, ByteBuf out) {
+    private void doEncodeRequest(RequestPayload msg, ByteBuf out) {
         out.writeShort(ProtocolHeader.MAGIC)
                 .writeByte(ProtocolHeader.REQUEST)
                 .writeByte(0x00)
@@ -35,7 +37,7 @@ public class ProtocolEncoder extends MessageToByteEncoder<PayloadHolder> {
                 .writeBytes(msg.bytes());
     }
 
-    private void doEncodeResponse(ResponsePayloadHolder msg, ByteBuf out) {
+    private void doEncodeResponse(ResponsePayload msg, ByteBuf out) {
         out.writeShort(ProtocolHeader.MAGIC)
                 .writeByte(ProtocolHeader.RESPONSE)
                 .writeByte(msg.status())

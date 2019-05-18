@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.netty;
+package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

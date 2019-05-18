@@ -3,40 +3,33 @@ package io.github.nnkwrik.kirinrpc.netty;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.internal.PlatformDependent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author nnkwrik
- * @date 19/04/29 12:33
+ * @date 19/05/18 19:42
  */
 @Slf4j
-public class KirinNettyServerAcceptor {
-    private InetSocketAddress serverAddress;
-    private ServerBootstrap bootstrap;
+public abstract class NettyAcceptor {
+    protected InetSocketAddress serverAddress;
+    protected ServerBootstrap bootstrap;
     private int nBosses;
     private int nWorkers;
-    EventLoopGroup bossGroup;
-    EventLoopGroup workerGroup;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
     protected volatile ByteBufAllocator allocator;
 
-
-    public KirinNettyServerAcceptor(int port) {
+    public NettyAcceptor(int port) {
         this(port, 1, Runtime.getRuntime().availableProcessors() << 1);
     }
 
-    public KirinNettyServerAcceptor(int port, int nBosses, int nWorkers) {
+    public NettyAcceptor(int port, int nBosses, int nWorkers) {
         this.serverAddress = new InetSocketAddress(port);
         this.nBosses = nBosses;
         this.nWorkers = nWorkers;
@@ -102,40 +95,9 @@ public class KirinNettyServerAcceptor {
                  */
                 .childOption(ChannelOption.ALLOW_HALF_CLOSURE, false);
 
-                log.info("netty acceptor completed initialization.");
+        log.info("netty acceptor completed initialization.");
     }
 
-    private AcceptorIdleStateTrigger idleStateTrigger = new AcceptorIdleStateTrigger();//处理心跳超时
+    public abstract void start(boolean sync) throws InterruptedException;
 
-
-    public void start() throws InterruptedException {
-        this.start(true);
-    }
-
-    public void start(boolean sync) throws InterruptedException {
-        bootstrap.channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(
-                                //每隔60s的时间内如果没有接受到任何的read事件的话，则会触发userEventTriggered事件，并指定IdleState的类型为READER_IDLE
-                                new IdleStateHandler(60,0,0, TimeUnit.SECONDS),
-                                //因为我们在client端设置了每隔30s会发送一个心跳包过来，如果60s都没有收到心跳，则说明链路发生了问题
-                                idleStateTrigger,
-                                new ProtocolDecoder()
-
-                        );
-                    }
-                });
-
-        ChannelFuture future = bootstrap.bind(serverAddress).sync();
-
-        log.info("netty acceptor server start.");
-
-        if (sync) {
-            future.channel().closeFuture().sync();//把主线程wait
-            //服务器同步连接断开时,这句代码才会往下执行
-        }
-
-    }
 }

@@ -1,5 +1,6 @@
-package io.github.nnkwrik.kirinrpc.registry;
+package io.github.nnkwrik.kirinrpc.registry.remote;
 
+import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,16 +26,6 @@ public class RegisterMeta {
         private String host;
         // 端口
         private int port;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ServiceMeta {
-        //服务接口名
-        private String serviceName;
-        //筛选
-        private String serviceGroup;
     }
 
 }
