@@ -1,10 +1,11 @@
-package io.github.nnkwrik.kirinrpc.netty;
+package io.github.nnkwrik.kirinrpc.netty.srv;
 
 import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorHandler;
 import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdleStateTrigger;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
 import io.github.nnkwrik.kirinrpc.rpc.ProviderProcessor;
+import io.github.nnkwrik.kirinrpc.rpc.ServiceBeanContainer;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -27,9 +28,10 @@ public class KirinServerAcceptor extends NettyAcceptor {
     //进行rpc调用的handler
     private final AcceptorHandler handler;
 
-    public KirinServerAcceptor(ProviderProcessor processor, int port) {
+    public KirinServerAcceptor(ServiceBeanContainer serviceContainer, int port) {
         super(port);
-        this.handler = new AcceptorHandler(processor);
+        ProviderProcessor providerProcessor = new ProviderProcessor(serviceContainer);
+        this.handler = new AcceptorHandler(providerProcessor);
     }
 
 

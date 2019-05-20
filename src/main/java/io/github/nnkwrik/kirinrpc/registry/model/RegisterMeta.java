@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.registry.remote;
+package io.github.nnkwrik.kirinrpc.registry.model;
 
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import lombok.AllArgsConstructor;

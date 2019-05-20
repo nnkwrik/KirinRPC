@@ -1,6 +1,11 @@
 package io.github.nnkwrik.kirinrpc.serializer;
 
 
+import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
+import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
+import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
+
 /**
  * 
  * @author BazingaLyn
@@ -24,4 +29,8 @@ public interface Serializer {
      * @return
      */
     <T> T readObject(byte[] bytes, Class<T> clazz);
+
+	KirinRequest deserializeRequest(RequestPayload requestPayload);
+
+	ResponsePayload serializeResponse(KirinResponse response, long id);
 }

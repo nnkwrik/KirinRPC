@@ -1,6 +1,5 @@
 package io.github.nnkwrik.kirinrpc.rpc.model;
 
-import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayload;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,13 +10,15 @@ import java.io.Serializable;
  */
 @Data
 public class KirinRequest implements Serializable {
+
     private String appName;
 
     private ServiceMeta serviceMeta;
 
     private String methodName;
 
+    private Class<?>[] argTypes;
+
     private Object[] args;
 
-    private RequestPayload payload;
 }

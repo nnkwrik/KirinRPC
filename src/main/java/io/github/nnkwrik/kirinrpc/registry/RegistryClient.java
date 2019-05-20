@@ -1,4 +1,6 @@
-package io.github.nnkwrik.kirinrpc.registry.remote;
+package io.github.nnkwrik.kirinrpc.registry;
+
+import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 
 import java.util.List;
 

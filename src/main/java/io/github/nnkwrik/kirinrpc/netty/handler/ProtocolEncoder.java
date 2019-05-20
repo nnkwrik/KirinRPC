@@ -1,9 +1,9 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
-import io.github.nnkwrik.kirinrpc.netty.protocol.PayloadHolder;
+import io.github.nnkwrik.kirinrpc.netty.model.PayloadHolder;
 import io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader;
-import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayload;
-import io.github.nnkwrik.kirinrpc.netty.protocol.ResponsePayload;
+import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

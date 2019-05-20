@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.netty;
+package io.github.nnkwrik.kirinrpc.netty.srv;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;

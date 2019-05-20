@@ -1,5 +1,9 @@
 package io.github.nnkwrik.kirinrpc.serializer.protostuff;
 
+import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
+import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
+import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;
@@ -13,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 具体实现
+ *
  * @author BazingaLyn
  * @description
  * @time 2016年7月26日18:55:54
@@ -20,43 +25,54 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProtoStuffSerializer implements Serializer {
 
-	private static Map<Class<?>, Schema<?>> cachedSchema = new ConcurrentHashMap<Class<?>, Schema<?>>();
+    private static Map<Class<?>, Schema<?>> cachedSchema = new ConcurrentHashMap<Class<?>, Schema<?>>();
 
-	private static Objenesis objenesis = new ObjenesisStd(true);
+    private static Objenesis objenesis = new ObjenesisStd(true);
 
-	@SuppressWarnings("unchecked")
-	public <T> byte[] writeObject(T obj) {
+    @SuppressWarnings("unchecked")
+    public <T> byte[] writeObject(T obj) {
 
-		Class<T> cls = (Class<T>) obj.getClass();
-		LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
-		try {
-			Schema<T> schema = getSchema(cls);
-			return ProtostuffIOUtil.toByteArray(obj, schema, buffer);
-		} catch (Exception e) {
-			throw new IllegalStateException(e.getMessage(), e);
-		} finally {
-			buffer.clear();
-		}
-	}
+        Class<T> cls = (Class<T>) obj.getClass();
+        LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
+        try {
+            Schema<T> schema = getSchema(cls);
+            return ProtostuffIOUtil.toByteArray(obj, schema, buffer);
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        } finally {
+            buffer.clear();
+        }
+    }
 
-	public <T> T readObject(byte[] bytes, Class<T> clazz) {
-		try {
-			T message = objenesis.newInstance(clazz);
-			Schema<T> schema = getSchema(clazz);
-			ProtostuffIOUtil.mergeFrom(bytes, message, schema);
-			return message;
-		} catch (Exception e) {
-			throw new IllegalStateException(e.getMessage(), e);
-		}
-	}
+    public <T> T readObject(byte[] bytes, Class<T> clazz) {
+        try {
+            T message = objenesis.newInstance(clazz);
+            Schema<T> schema = getSchema(clazz);
+            ProtostuffIOUtil.mergeFrom(bytes, message, schema);
+            return message;
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	private static <T> Schema<T> getSchema(Class<T> cls) {
-		Schema<T> schema = (Schema<T>) cachedSchema.get(cls);
-		if (schema == null) {
-			schema = RuntimeSchema.createFrom(cls);
-			cachedSchema.put(cls, schema);
-		}
-		return schema;
-	}
+    @SuppressWarnings("unchecked")
+    private static <T> Schema<T> getSchema(Class<T> cls) {
+        Schema<T> schema = (Schema<T>) cachedSchema.get(cls);
+        if (schema == null) {
+            schema = RuntimeSchema.createFrom(cls);
+            cachedSchema.put(cls, schema);
+        }
+        return schema;
+    }
+
+    public KirinRequest deserializeRequest(RequestPayload requestPayload) {
+        return readObject(requestPayload.bytes(), KirinRequest.class);
+    }
+
+    public ResponsePayload serializeResponse(KirinResponse response, long id) {
+        byte[] bytes = writeObject(response);
+        ResponsePayload responsePayload = new ResponsePayload(id);
+        responsePayload.bytes(bytes, this);
+        return responsePayload;
+    }
 }

@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.netty.protocol;
+package io.github.nnkwrik.kirinrpc.netty.model;
 
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
 

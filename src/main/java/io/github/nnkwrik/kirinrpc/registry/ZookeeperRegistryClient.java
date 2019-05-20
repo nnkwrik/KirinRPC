@@ -1,5 +1,6 @@
-package io.github.nnkwrik.kirinrpc.registry.remote;
+package io.github.nnkwrik.kirinrpc.registry;
 
+import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -54,7 +55,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                 isConnected.countDown();
             } else if (newState == ConnectionState.RECONNECTED) {
 
-                log.info("Zookeeper connection has been re-established, will re-subscribe and re-register.");
+                log.info("Zookeeper connection has been re-established, will re-subscribe and re-addServiceBean.");
 //                // 重新订阅
 //                for (RegisterMeta.ServiceMeta serviceMeta : getSubscribeSet()) {
 //                    doSubscribe(serviceMeta);
@@ -83,7 +84,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     registerMetaMap.put(meta, RegisterState.PREPARE);
                     createNode(meta);
                 } catch (InterruptedException e) {
-                    log.warn("[register.executor] interrupted.");
+                    log.warn("[addServiceBean.executor] interrupted.");
                 } catch (Throwable t) {
                     if (meta != null) {
                         log.error("Register [{}] fail: {}, will try again...", meta.getServiceMeta(), t.getStackTrace());
@@ -128,7 +129,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     String.valueOf(meta.getAddress().getPort())));
         } catch (Exception e) {
             if (log.isWarnEnabled()) {
-                log.warn("Create register meta: {} path failed, {}.", meta, e.getStackTrace());
+                log.warn("Create addServiceBean meta: {} path failed, {}.", meta, e.getStackTrace());
             }
         }
 

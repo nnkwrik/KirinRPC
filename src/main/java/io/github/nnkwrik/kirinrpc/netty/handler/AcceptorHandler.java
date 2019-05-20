@@ -1,7 +1,7 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
-import io.github.nnkwrik.kirinrpc.netty.protocol.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.rpc.ProviderProcessor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;

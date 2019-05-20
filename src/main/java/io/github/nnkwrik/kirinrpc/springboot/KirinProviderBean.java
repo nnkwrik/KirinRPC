@@ -1,12 +1,11 @@
 package io.github.nnkwrik.kirinrpc.springboot;
 
 import io.github.nnkwrik.kirinrpc.common.util.NetUtils;
-import io.github.nnkwrik.kirinrpc.netty.KirinServerAcceptor;
-import io.github.nnkwrik.kirinrpc.registry.local.LocalRegistry;
-import io.github.nnkwrik.kirinrpc.registry.remote.RegisterMeta;
-import io.github.nnkwrik.kirinrpc.registry.remote.RegistryClient;
-import io.github.nnkwrik.kirinrpc.registry.remote.ZookeeperRegistryClient;
-import io.github.nnkwrik.kirinrpc.rpc.ProviderProcessor;
+import io.github.nnkwrik.kirinrpc.netty.srv.KirinServerAcceptor;
+import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
+import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
+import io.github.nnkwrik.kirinrpc.registry.ZookeeperRegistryClient;
+import io.github.nnkwrik.kirinrpc.rpc.ServiceBeanContainer;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
 import io.github.nnkwrik.kirinrpc.springboot.config.ProviderConfiguration;
@@ -18,9 +17,9 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.net.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author nnkwrik
@@ -32,8 +31,8 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
 
     private ApplicationContext applicationContext;
     private ProviderConfiguration providerConfig;
-    private LocalRegistry localRegistry;
-    private RegistryClient remoteRegistry;
+    private ServiceBeanContainer serviceContainer;
+    private RegistryClient registryClient;
     private KirinServerAcceptor nettyServerAcceptor;
     private InetSocketAddress serverAddress;
 
@@ -49,38 +48,36 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
             return;
         }
         this.serverAddress = findServerAddress(providerConfig);
+        this.serviceContainer = new ServiceBeanContainer();
         initRegistry();
         initServer();
     }
 
     private void initRegistry() {
-        this.localRegistry = new LocalRegistry();
+        this.serviceContainer = new ServiceBeanContainer();
         Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(KirinProviderService.class);
-        List<ServiceMeta> serviceMetas = null;
-        if (serviceBeanMap != null) {
-            //注册到本地
-            serviceMetas = localRegistry.register(serviceBeanMap.values());
-        }
-        //创建远程注册中心连接
-        remoteRegistry = new ZookeeperRegistryClient(providerConfig.getRegistryAddress());
+        if (serviceBeanMap == null || serviceBeanMap.isEmpty()) return;
+        //放入提供者容器
+        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(serviceBeanMap.values());
 
-        List<RegisterMeta> registerMetas = new ArrayList<>();
-        serviceMetas.forEach(serviceMeta -> {
-            RegisterMeta.Address address
-                    = new RegisterMeta.Address(serverAddress.getAddress().getHostAddress(), serverAddress.getPort());
-            registerMetas.add(new RegisterMeta(address, serviceMeta));
-        });
+        //创建远程注册中心连接
+        registryClient = new ZookeeperRegistryClient(providerConfig.getRegistryAddress());
+
+        List<RegisterMeta> registerMetas = serviceMetas.stream()
+                .map(s -> {
+                    RegisterMeta.Address address =
+                            new RegisterMeta.Address(serverAddress.getAddress().getHostAddress(), serverAddress.getPort());
+                    return new RegisterMeta(address, s);
+                })
+                .collect(Collectors.toList());
+
+
         //注册到远程
-        remoteRegistry.register(registerMetas);
+        registryClient.register(registerMetas);
     }
 
     private void initServer() {
-        nettyServerAcceptor = new KirinServerAcceptor(new ProviderProcessor() {
-            @Override
-            public Object lookupService(ServiceMeta serviceMeta) {
-                return localRegistry.lookupService(serviceMeta);
-            }
-        }, providerConfig.getServerPort());
+        nettyServerAcceptor = new KirinServerAcceptor(serviceContainer, providerConfig.getServerPort());
 
         nettyServerAcceptor.init();
     }
