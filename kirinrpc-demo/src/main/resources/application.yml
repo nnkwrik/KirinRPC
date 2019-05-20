@@ -7,4 +7,4 @@
 #      address: 192.168.0.5:2181
 #    protocol:
 #      type: protobuf
-#      serverPort: 7070
+#      providerPort: 7070

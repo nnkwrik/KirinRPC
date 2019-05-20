@@ -9,15 +9,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.internal.PlatformDependent;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.InetSocketAddress;
-
 /**
  * @author nnkwrik
  * @date 19/05/18 19:42
  */
 @Slf4j
 public abstract class NettyAcceptor {
-    protected InetSocketAddress serverAddress;
     protected ServerBootstrap bootstrap;
     private int nBosses;
     private int nWorkers;
@@ -25,17 +22,17 @@ public abstract class NettyAcceptor {
     private EventLoopGroup workerGroup;
     protected volatile ByteBufAllocator allocator;
 
-    public NettyAcceptor(int port) {
-        this(port, 1, Runtime.getRuntime().availableProcessors() << 1);
+    public NettyAcceptor() {
+        this(1, Runtime.getRuntime().availableProcessors() << 1);
     }
 
-    public NettyAcceptor(int port, int nBosses, int nWorkers) {
-        this.serverAddress = new InetSocketAddress(port);
+    public NettyAcceptor(int nBosses, int nWorkers) {
         this.nBosses = nBosses;
         this.nWorkers = nWorkers;
+        this.init();
     }
 
-    public void init() {
+    private void init() {
         bossGroup = new NioEventLoopGroup(nBosses);
         workerGroup = new NioEventLoopGroup(nWorkers);
         //优先使用直接内存，提高性能
@@ -95,7 +92,7 @@ public abstract class NettyAcceptor {
                  */
                 .childOption(ChannelOption.ALLOW_HALF_CLOSURE, false);
 
-        log.info("netty acceptor completed initialization.");
+        log.info("netty server acceptor completed initialization.");
     }
 
     public abstract void start(boolean sync) throws InterruptedException;

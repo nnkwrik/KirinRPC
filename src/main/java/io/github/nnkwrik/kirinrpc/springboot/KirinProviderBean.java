@@ -76,10 +76,9 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
         registryClient.register(registerMetas);
     }
 
-    private void initServer() {
+    private void initServer() throws InterruptedException {
         nettyServerAcceptor = new KirinServerAcceptor(serviceContainer, providerConfig.getServerPort());
-
-        nettyServerAcceptor.init();
+        nettyServerAcceptor.start();
     }
 
     /**

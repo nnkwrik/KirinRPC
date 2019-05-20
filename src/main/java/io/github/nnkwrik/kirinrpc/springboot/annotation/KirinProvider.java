@@ -19,9 +19,9 @@ public @interface KirinProvider {
 
     String name() default "";
 
-    String serverAddress() default "";
+    String providerAddress() default "";
 
-    int serverPort() default 7070;
+    int providerPort() default 7070;
 
     String registryAddress() default "";
 }

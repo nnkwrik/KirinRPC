@@ -73,13 +73,13 @@ public class KirinAutoConfiguration {
 
         String serverAddress = config.getServerAddress();
         if (StringUtils.isEmpty(serverAddress)){
-            serverAddress = providerAnnotationConfig.registryAddress();
+            serverAddress = providerAnnotationConfig.providerAddress();
             config.setRegistryAddress(serverAddress);
         }
 
         Integer serverPort = config.getServerPort();
         if (serverPort == null) {
-            serverPort = providerAnnotationConfig.serverPort();
+            serverPort = providerAnnotationConfig.providerPort();
             config.setServerPort(serverPort);
         }
 
