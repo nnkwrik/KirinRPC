@@ -5,7 +5,7 @@ import io.github.nnkwrik.kirinrpc.netty.srv.KirinServerAcceptor;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
 import io.github.nnkwrik.kirinrpc.registry.ZookeeperRegistryClient;
-import io.github.nnkwrik.kirinrpc.rpc.ServiceBeanContainer;
+import io.github.nnkwrik.kirinrpc.rpc.provider.ServiceBeanContainer;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
 import io.github.nnkwrik.kirinrpc.springboot.config.ProviderConfiguration;

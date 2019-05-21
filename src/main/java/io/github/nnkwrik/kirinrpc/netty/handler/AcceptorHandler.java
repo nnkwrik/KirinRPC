@@ -1,14 +1,15 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
+import io.github.nnkwrik.kirinrpc.netty.IdealStateException;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.util.PayloadUtil;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderProcessor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.DecoderException;
-import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +26,6 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
 
     private final ProviderProcessor processor;
 
-    public static final AttributeKey<Long> requestIdAttrKey = AttributeKey.newInstance("requestId");
 
     public AcceptorHandler(ProviderProcessor processor) {
         this.processor = processor;
@@ -36,12 +36,11 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
         Channel ch = ctx.channel();
 
         if (msg instanceof RequestPayload) {
-            RequestPayload requestPayload = (RequestPayload) msg;
-            ch.attr(requestIdAttrKey).set(requestPayload.id());
+            PayloadUtil.saveRequestInfoInChannel(ch, (RequestPayload) msg);
             try {
-                processor.handleRequest(ch, requestPayload);
+                processor.handleRequest(ch, (RequestPayload) msg);
             } catch (Throwable t) {
-                processor.handleException(ch, requestPayload, t);
+                processor.handleException(ch, (RequestPayload) msg, t);
             }
         } else {
             log.warn("Unexpected message type received: {}, channel: {}.", msg.getClass(), ch);
@@ -76,7 +75,11 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         Channel ch = ctx.channel();
 
-        if (cause instanceof IOException) {
+        if (cause instanceof IdealStateException) {
+            log.error("IdealState exception exception was caught: {}, force to close channel: {}.", StackTraceUtil.stackTrace(cause), ch);
+
+            ch.close();
+        } else if (cause instanceof IOException) {
             log.error("An I/O exception was caught: {}, force to close channel: {}.", StackTraceUtil.stackTrace(cause), ch);
 
             ch.close();

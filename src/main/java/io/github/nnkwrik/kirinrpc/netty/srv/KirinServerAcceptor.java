@@ -1,11 +1,11 @@
 package io.github.nnkwrik.kirinrpc.netty.srv;
 
 import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorHandler;
-import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdleStateTrigger;
+import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdealStateTrigger;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderProcessor;
-import io.github.nnkwrik.kirinrpc.rpc.ServiceBeanContainer;
+import io.github.nnkwrik.kirinrpc.rpc.provider.ServiceBeanContainer;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -23,17 +23,19 @@ public class KirinServerAcceptor extends NettyAcceptor {
 
     private InetSocketAddress serverAddress;
     //处理心跳超时
-    private AcceptorIdleStateTrigger idleStateTrigger = new AcceptorIdleStateTrigger();
+    private AcceptorIdealStateTrigger idleStateTrigger = new AcceptorIdealStateTrigger();
     //编码器
     private final ProtocolEncoder encoder = new ProtocolEncoder();
     //进行rpc调用的handler
     private final AcceptorHandler handler;
+    //进行invoke调用的处理器
+    private final ProviderProcessor processor;
 
     public KirinServerAcceptor(ServiceBeanContainer serviceContainer, int port) {
         super();
-        ProviderProcessor providerProcessor = new ProviderProcessor(serviceContainer);
         this.serverAddress = new InetSocketAddress(port);
-        this.handler = new AcceptorHandler(providerProcessor);
+        this.processor = new ProviderProcessor(serviceContainer);
+        this.handler = new AcceptorHandler(processor);
     }
 
 
@@ -41,6 +43,7 @@ public class KirinServerAcceptor extends NettyAcceptor {
         this.start(true);
     }
 
+    @Override
     public void start(boolean sync) throws InterruptedException {
         bootstrap.channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -67,5 +70,12 @@ public class KirinServerAcceptor extends NettyAcceptor {
             //服务器同步连接断开时,这句代码才会往下执行
         }
 
+    }
+
+    @Override
+    public void shutdown() {
+        bossGroup.shutdownGracefully().syncUninterruptibly();
+        workerGroup.shutdownGracefully().syncUninterruptibly();
+        processor.shutdown();
     }
 }

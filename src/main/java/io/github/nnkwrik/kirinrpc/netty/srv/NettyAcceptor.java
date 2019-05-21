@@ -18,8 +18,8 @@ public abstract class NettyAcceptor {
     protected ServerBootstrap bootstrap;
     private int nBosses;
     private int nWorkers;
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
+    protected EventLoopGroup bossGroup;
+    protected EventLoopGroup workerGroup;
     protected volatile ByteBufAllocator allocator;
 
     public NettyAcceptor() {
@@ -96,5 +96,7 @@ public abstract class NettyAcceptor {
     }
 
     public abstract void start(boolean sync) throws InterruptedException;
+
+    public abstract void shutdown();
 
 }

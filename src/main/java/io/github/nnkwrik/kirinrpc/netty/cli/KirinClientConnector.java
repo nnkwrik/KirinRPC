@@ -1,6 +1,6 @@
 package io.github.nnkwrik.kirinrpc.netty.cli;
 
-import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdleStateTrigger;
+import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdealStateTrigger;
 import io.github.nnkwrik.kirinrpc.netty.handler.ConnectorHandler;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KirinClientConnector extends NettyConnector {
     //处理心跳超时
-    private AcceptorIdleStateTrigger idleStateTrigger = new AcceptorIdleStateTrigger();
+    private AcceptorIdealStateTrigger idleStateTrigger = new AcceptorIdealStateTrigger();
     //编码器
     private final ProtocolEncoder encoder = new ProtocolEncoder();
 

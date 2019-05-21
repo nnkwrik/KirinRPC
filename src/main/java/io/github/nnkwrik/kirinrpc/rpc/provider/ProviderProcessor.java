@@ -1,10 +1,10 @@
 package io.github.nnkwrik.kirinrpc.rpc.provider;
 
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
-import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorHandler;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
 import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
+import io.github.nnkwrik.kirinrpc.netty.util.PayloadUtil;
 import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ProviderProcessor implements RequestProcessor {
 
-    private static ThreadPoolExecutor threadPoolExecutor;
+    private static ThreadPoolExecutor executor;
 
     private final ResponseSender responseSender;
 
@@ -55,26 +55,25 @@ public class ProviderProcessor implements RequestProcessor {
 
     @Override
     public void shutdown() {
-        threadPoolExecutor.shutdown();
+        if (executor != null) {
+            executor.shutdown();
+        }
     }
 
 
     private static void submit(Runnable task) {
-        if (threadPoolExecutor == null) {
+        if (executor == null) {
             synchronized (ProviderProcessor.class) {
-                if (threadPoolExecutor == null) {
+                if (executor == null) {
                     //双重锁创建线程池
-                    threadPoolExecutor = new ThreadPoolExecutor(16, 16, 600L,
+                    executor = new ThreadPoolExecutor(16, 16, 600L,
                             TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
                 }
             }
         }
-        threadPoolExecutor.submit(task);
+        executor.submit(task);
     }
 
-    public static Long getRequestId(Channel channel) {
-        return channel.attr(AcceptorHandler.requestIdAttrKey).get();
-    }
 
     public static class ResponseSenderImpl implements ResponseSender {
 
@@ -82,7 +81,7 @@ public class ProviderProcessor implements RequestProcessor {
 
         @Override
         public void sendSuccessResponse(Channel channel, Object invokeResult) {
-            final Long requestId = getRequestId(channel);
+            final Long requestId = PayloadUtil.getRequestId(channel);
             log.info("Success to invoke provider (requestId = {}), result = [{}].", requestId, invokeResult.toString());
             KirinResponse response = new KirinResponse();
             response.setResult(invokeResult);
@@ -97,7 +96,7 @@ public class ProviderProcessor implements RequestProcessor {
 
         @Override
         public void sendFailResponse(Channel channel, KirinRemoteException e) {
-            final Long requestId = getRequestId(channel);
+            final Long requestId = PayloadUtil.getRequestId(channel);
             log.error("Excepted Error Happened when solve remote call (requestId = {}), {}.", requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
@@ -113,7 +112,7 @@ public class ProviderProcessor implements RequestProcessor {
 
         @Override
         public void sendErrorResponse(Channel channel, KirinRemoteException e) {
-            final Long requestId = getRequestId(channel);
+            final Long requestId = PayloadUtil.getRequestId(channel);
             log.error("Unknown Error happened when solve remote call (requestId = {}), {}.", requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
@@ -139,7 +138,16 @@ public class ProviderProcessor implements RequestProcessor {
             channel.writeAndFlush(responsePayload).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    log.debug("Send response for request {}", responsePayload.id());
+
+                    if (channelFuture.isSuccess()) {
+                        log.debug("Success to send response to request {},spent {} milliseconds during request",
+                                responsePayload.id(), PayloadUtil.getProcessingTime(channel, TimeUnit.MILLISECONDS));
+                    } else {
+                        log.error("Fail to send response to request {},spent {} milliseconds during request",
+                                responsePayload.id(), PayloadUtil.getProcessingTime(channel, TimeUnit.MILLISECONDS));
+                        channel.close();
+                        return;
+                    }
                     if (close) {
                         log.debug("Close the channel (requestId = {}).", responsePayload.id());
                         channel.close();

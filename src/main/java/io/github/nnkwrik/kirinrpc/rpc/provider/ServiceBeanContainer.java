@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.rpc;
+package io.github.nnkwrik.kirinrpc.rpc.provider;
 
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceWrapper;

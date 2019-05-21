@@ -1,5 +1,6 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
+import io.github.nnkwrik.kirinrpc.netty.IdealStateException;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -14,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class AcceptorIdleStateTrigger extends ChannelInboundHandlerAdapter {
+public class AcceptorIdealStateTrigger extends ChannelInboundHandlerAdapter {
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
@@ -23,8 +24,7 @@ public class AcceptorIdleStateTrigger extends ChannelInboundHandlerAdapter {
                 /**
                  * 60秒都没有收到心跳包.
                  */
-                log.error("occor exception");
-                throw new Exception("NO SIGNAL");
+                throw new IdealStateException("Did not receive heartbeat over 60 seconds.");
             }
         } else {
             super.userEventTriggered(ctx, evt);
