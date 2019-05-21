@@ -1,6 +1,8 @@
 package io.github.nnkwrik.kirinrpc.rpc;
 
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
+import io.github.nnkwrik.kirinrpc.rpc.model.ServiceWrapper;
 import io.netty.channel.Channel;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -23,7 +25,7 @@ public class ProviderProcessor {
 
 
     public void handleRequest(Channel channel, RequestPayload requestPayload) throws Exception {
-        RPCTask task = new RPCTask(serviceBeanContainer, channel, requestPayload);
+        RPCTask task = new RPCTask(this, channel, requestPayload);
         submit(task);
     }
 
@@ -41,7 +43,11 @@ public class ProviderProcessor {
                 }
             }
         }
-        task.run();
+        threadPoolExecutor.submit(task);
+    }
+
+    public ServiceWrapper lookupService(ServiceMeta serviceMeta) {
+        return serviceBeanContainer.lookupService(serviceMeta);
     }
 
 }

@@ -24,7 +24,7 @@ public class KirinClientConnectorTest {
         request.setArgs(new Object[]{"tom"});
 
         RequestPayload requestPayload = new RequestPayload(1);
-        requestPayload.bytes(SerializerHolder.serializerImpl().writeObject(request),SerializerHolder.serializerImpl());
+        requestPayload.bytes(SerializerHolder.serializerImpl().writeObject(request));
 
         Channel channel = kirinClientConnector.connect("127.0.0.1", 7070);
         channel.writeAndFlush(requestPayload);

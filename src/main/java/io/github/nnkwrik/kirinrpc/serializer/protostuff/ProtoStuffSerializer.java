@@ -65,14 +65,4 @@ public class ProtoStuffSerializer implements Serializer {
         return schema;
     }
 
-    public KirinRequest deserializeRequest(RequestPayload requestPayload) {
-        return readObject(requestPayload.bytes(), KirinRequest.class);
-    }
-
-    public ResponsePayload serializeResponse(KirinResponse response, long id) {
-        byte[] bytes = writeObject(response);
-        ResponsePayload responsePayload = new ResponsePayload(id);
-        responsePayload.bytes(bytes, this);
-        return responsePayload;
-    }
 }

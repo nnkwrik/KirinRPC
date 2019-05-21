@@ -8,3 +8,6 @@
 #    protocol:
 #      type: protobuf
 #      providerPort: 7070
+logging:
+  level:
+    io.github.nnkwrik.kirinrpc: debug

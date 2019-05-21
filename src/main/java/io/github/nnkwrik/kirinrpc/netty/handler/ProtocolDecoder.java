@@ -1,8 +1,8 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
-import io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
+import io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 import static io.github.nnkwrik.kirinrpc.netty.protocol.ProtocolHeader.*;
-import static io.github.nnkwrik.kirinrpc.serializer.SerializerHolder.serializerImpl;
 
 /**
  * @author nnkwrik
@@ -58,7 +57,7 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
 
                         RequestPayload requestHolder = new RequestPayload(header.id());
                         requestHolder.timestamp(System.currentTimeMillis());
-                        requestHolder.bytes(bytes, serializerImpl());
+                        requestHolder.bytes(bytes);
                         out.add(requestHolder);
 
                         break;
@@ -69,7 +68,7 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
 
                         ResponsePayload responseHolder = new ResponsePayload(header.id());
                         responseHolder.status(header.status());
-                        responseHolder.bytes(bytes, serializerImpl());
+                        responseHolder.bytes(bytes);
                         out.add(responseHolder);
                     }
 

@@ -1,7 +1,5 @@
 package io.github.nnkwrik.kirinrpc.netty.model;
 
-import io.github.nnkwrik.kirinrpc.serializer.Serializer;
-
 /**
  * 序列化之前的KririnRequest
  *
@@ -14,7 +12,6 @@ public class PayloadHolder {
 
     private long id;
     private byte[] bytes;
-    private Serializer serializer;
 
     public PayloadHolder(long id) {
         this.id = id;
@@ -28,18 +25,12 @@ public class PayloadHolder {
         this.id = id;
     }
 
-    public void bytes(byte[] bytes, Serializer serializer) {
+    public void bytes(byte[] bytes) {
         this.bytes = bytes;
-        this.serializer = serializer;
     }
 
     public byte[] bytes() {
         return bytes;
     }
-
-    public Serializer serializer() {
-        return serializer;
-    }
-
 
 }
