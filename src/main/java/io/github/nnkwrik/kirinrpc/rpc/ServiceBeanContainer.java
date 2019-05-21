@@ -22,7 +22,7 @@ public class ServiceBeanContainer {
 
     private final ConcurrentMap<String, Object> serviceBeans = new ConcurrentHashMap<>();
 
-    public List<ServiceMeta> addServiceBean(Collection<Object> serviceBeans) {
+    public List<ServiceMeta> addServiceBean(String appName, Collection<Object> serviceBeans) {
         List<ServiceMeta> serviceMetaList = new ArrayList<>();
         for (Object serviceBean : serviceBeans) {
             List<String> interfaceName = Arrays.stream(serviceBean.getClass().getInterfaces())
@@ -31,7 +31,7 @@ public class ServiceBeanContainer {
             String serviceGroup = serviceBean.getClass().getAnnotation(KirinProviderService.class).group();
             interfaceName.stream().forEach(serviceName -> {
                 log.info("Loading service: {} ,group : {}", serviceName, serviceGroup);
-                ServiceMeta serviceMeta = new ServiceMeta(serviceName, serviceGroup);
+                ServiceMeta serviceMeta = new ServiceMeta(appName, serviceName, serviceGroup);
                 String serviceKey = serviceGroup + "/" + serviceName;
                 this.serviceBeans.put(serviceKey, serviceBean);
                 serviceMetaList.add(serviceMeta);

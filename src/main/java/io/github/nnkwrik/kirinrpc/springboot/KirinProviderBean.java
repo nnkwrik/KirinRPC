@@ -58,7 +58,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
         Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(KirinProviderService.class);
         if (serviceBeanMap == null || serviceBeanMap.isEmpty()) return;
         //放入提供者容器
-        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(serviceBeanMap.values());
+        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(providerConfig.getName(),serviceBeanMap.values());
 
         //创建远程注册中心连接
         registryClient = new ZookeeperRegistryClient(providerConfig.getRegistryAddress());

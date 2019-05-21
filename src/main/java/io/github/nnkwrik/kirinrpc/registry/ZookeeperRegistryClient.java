@@ -1,5 +1,6 @@
 package io.github.nnkwrik.kirinrpc.registry;
 
+import io.github.nnkwrik.kirinrpc.common.util.JsonUtil;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -123,10 +124,9 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     registerMetaMap.put(meta, RegisterState.DONE);
                 }
                 log.info("Register: {} - {}.", meta, event);
-            }).forPath(String.format("%s/%s:%s",
+            }).forPath(String.format("%s/%s",
                     directory,
-                    meta.getAddress().getHost(),
-                    String.valueOf(meta.getAddress().getPort())));
+                    JsonUtil.toJson(meta)));
         } catch (Exception e) {
             if (log.isWarnEnabled()) {
                 log.warn("Create addServiceBean meta: {} path failed, {}.", meta, e.getStackTrace());

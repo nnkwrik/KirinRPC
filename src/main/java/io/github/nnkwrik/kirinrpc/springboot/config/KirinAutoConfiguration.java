@@ -74,7 +74,7 @@ public class KirinAutoConfiguration {
         String serverAddress = config.getServerAddress();
         if (StringUtils.isEmpty(serverAddress)){
             serverAddress = providerAnnotationConfig.providerAddress();
-            config.setRegistryAddress(serverAddress);
+            config.setServerAddress(serverAddress);
         }
 
         Integer serverPort = config.getServerPort();
