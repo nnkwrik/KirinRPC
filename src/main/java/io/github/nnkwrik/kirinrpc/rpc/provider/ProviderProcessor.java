@@ -6,10 +6,7 @@ import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
 import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
 import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
-import io.github.nnkwrik.kirinrpc.rpc.ServiceBeanContainer;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
-import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
-import io.github.nnkwrik.kirinrpc.rpc.model.ServiceWrapper;
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
 import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
 import io.netty.channel.Channel;
@@ -28,18 +25,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ProviderProcessor implements RequestProcessor {
 
-    private final ServiceBeanContainer serviceBeanContainer;
-
     private static ThreadPoolExecutor threadPoolExecutor;
 
     private final ResponseSender responseSender;
 
     private final ProviderLookup providerLookup;
 
-    public ProviderProcessor(ServiceBeanContainer serviceBeanContainer) {
-        this.serviceBeanContainer = serviceBeanContainer;
+    public ProviderProcessor(ProviderLookup providerLookup) {
+        this.providerLookup = providerLookup;
         this.responseSender = new ResponseSenderImpl();
-        this.providerLookup = new ProviderLookupImpl(serviceBeanContainer);
     }
 
 
@@ -154,19 +148,5 @@ public class ProviderProcessor implements RequestProcessor {
             });
         }
 
-    }
-
-    public static class ProviderLookupImpl implements ProviderLookup {
-        private final ServiceBeanContainer serviceBeanContainer;
-
-        public ProviderLookupImpl(ServiceBeanContainer serviceBeanContainer) {
-            this.serviceBeanContainer = serviceBeanContainer;
-        }
-
-
-        @Override
-        public ServiceWrapper lookupService(ServiceMeta serviceMeta) {
-            return serviceBeanContainer.lookupService(serviceMeta);
-        }
     }
 }

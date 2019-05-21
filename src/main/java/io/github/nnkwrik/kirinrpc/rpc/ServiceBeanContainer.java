@@ -2,6 +2,7 @@ package io.github.nnkwrik.kirinrpc.rpc;
 
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceWrapper;
+import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderLookup;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
  * @date 19/05/18 18:18
  */
 @Slf4j
-public class ServiceBeanContainer {
+public class ServiceBeanContainer implements ProviderLookup {
 
     private final ConcurrentMap<String, Object> serviceBeans = new ConcurrentHashMap<>();
 
@@ -41,9 +42,9 @@ public class ServiceBeanContainer {
         return serviceMetaList;
     }
 
+    @Override
     public ServiceWrapper lookupService(ServiceMeta serviceMeta) {
         Object serviceBean = serviceBeans.get(serviceMeta.getServiceGroup() + "/" + serviceMeta.getServiceName());
         return new ServiceWrapper(serviceBean);
     }
-
 }
