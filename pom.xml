@@ -104,7 +104,7 @@
         </dependency>
         <!--<dependency>-->
             <!--<groupId>org.slf4j</groupId>-->
-            <!--<artifactId>slf4j-api</artifactId>-->
+            <!--<artifactId>slf4j-provider</artifactId>-->
         <!--</dependency>-->
 
         <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->

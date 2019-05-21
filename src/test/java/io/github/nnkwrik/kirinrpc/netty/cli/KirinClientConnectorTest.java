@@ -18,7 +18,7 @@ public class KirinClientConnectorTest {
 
         KirinRequest request = new KirinRequest();
         request.setAppName("");
-        request.setServiceMeta(new ServiceMeta("appName","io.github.nnkwrik.kirinrpc.demo.api.HelloWorldService", Constants.ANY_GROUP));
+        request.setServiceMeta(new ServiceMeta("appName","io.github.nnkwrik.kirinrpc.demo.provider.HelloWorldService", Constants.ANY_GROUP));
         request.setMethodName("sayHello");
         request.setArgTypes(new Class[]{String.class});
         request.setArgs(new Object[]{"tom"});

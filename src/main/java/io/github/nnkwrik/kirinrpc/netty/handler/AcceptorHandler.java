@@ -2,12 +2,13 @@ package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
-import io.github.nnkwrik.kirinrpc.rpc.ProviderProcessor;
+import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderProcessor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.DecoderException;
+import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +25,8 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
 
     private final ProviderProcessor processor;
 
+    public static final AttributeKey<Long> requestIdAttrKey = AttributeKey.newInstance("requestId");
+
     public AcceptorHandler(ProviderProcessor processor) {
         this.processor = processor;
     }
@@ -33,10 +36,12 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
         Channel ch = ctx.channel();
 
         if (msg instanceof RequestPayload) {
+            RequestPayload requestPayload = (RequestPayload) msg;
+            ch.attr(requestIdAttrKey).set(requestPayload.id());
             try {
-                processor.handleRequest(ch, (RequestPayload) msg);
+                processor.handleRequest(ch, requestPayload);
             } catch (Throwable t) {
-                processor.handleException(ch, (RequestPayload) msg, t);
+                processor.handleException(ch, requestPayload, t);
             }
         } else {
             log.warn("Unexpected message type received: {}, channel: {}.", msg.getClass(), ch);
