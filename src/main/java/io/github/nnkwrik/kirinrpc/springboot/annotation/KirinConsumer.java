@@ -1,6 +1,6 @@
 package io.github.nnkwrik.kirinrpc.springboot.annotation;
 
-import io.github.nnkwrik.kirinrpc.springboot.config.provider.KirinProviderAutoConfiguration;
+import io.github.nnkwrik.kirinrpc.springboot.config.consumer.KirinConsumerAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -10,19 +10,14 @@ import java.lang.annotation.Target;
 
 /**
  * @author nnkwrik
- * @date 19/04/25 11:47
+ * @date 19/05/22 12:27
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Import(KirinProviderAutoConfiguration.class)
-public @interface KirinProvider {
+@Import(KirinConsumerAutoConfiguration.class)
+public @interface KirinConsumer {
 
     String name() default "";
-
-    //放到注册中心的信息
-    String providerAddress() default "";
-
-    int providerPort() default 7070;
 
     String registryAddress() default "";
 }

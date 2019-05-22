@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.springboot;
+package io.github.nnkwrik.kirinrpc.springboot.config.provider;
 
 import io.github.nnkwrik.kirinrpc.common.util.NetUtils;
 import io.github.nnkwrik.kirinrpc.netty.srv.KirinServerAcceptor;
@@ -8,7 +8,7 @@ import io.github.nnkwrik.kirinrpc.registry.ZookeeperRegistryClient;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ServiceBeanContainer;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
-import io.github.nnkwrik.kirinrpc.springboot.config.ProviderConfiguration;
+import io.github.nnkwrik.kirinrpc.springboot.config.provider.ProviderConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class KirinProviderBean implements ApplicationContextAware, InitializingBean {
 
     private ApplicationContext applicationContext;
-    private ProviderConfiguration providerConfig;
+    private ProviderConfig providerConfig;
     private ServiceBeanContainer serviceContainer;
     private RegistryClient registryClient;
     private KirinServerAcceptor nettyServerAcceptor;
@@ -43,7 +43,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.providerConfig = applicationContext.getBean(ProviderConfiguration.class);
+        this.providerConfig = applicationContext.getBean(ProviderConfig.class);
         if (providerConfig == null) {
             return;
         }
@@ -77,7 +77,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
     }
 
     private void initServer() throws InterruptedException {
-        nettyServerAcceptor = new KirinServerAcceptor(serviceContainer, providerConfig.getServerPort());
+        nettyServerAcceptor = new KirinServerAcceptor(serviceContainer, providerConfig.getProviderPort());
         nettyServerAcceptor.start();
     }
 
@@ -87,8 +87,8 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
      * @param providerConfig
      * @return
      */
-    public InetSocketAddress findServerAddress(ProviderConfiguration providerConfig) {
-        String address = providerConfig.getServerAddress();
+    public InetSocketAddress findServerAddress(ProviderConfig providerConfig) {
+        String address = providerConfig.getProviderAddress();
         if (NetUtils.isInvalidLocalHost(address)) {
             try {
                 address = InetAddress.getLocalHost().getHostAddress();
@@ -115,7 +115,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
             }
         }
 
-        return new InetSocketAddress(address, providerConfig.getServerPort());
+        return new InetSocketAddress(address, providerConfig.getProviderPort());
 
     }
 

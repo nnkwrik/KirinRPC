@@ -1,8 +1,10 @@
-package io.github.nnkwrik.kirinrpc.springboot.config;
+package io.github.nnkwrik.kirinrpc.springboot.config.provider;
 
 import io.github.nnkwrik.kirinrpc.common.util.Requires;
+import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinConsumer;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,23 +23,22 @@ import java.util.UUID;
  */
 @Slf4j
 @Configuration
-@ComponentScan(basePackages = {"io.github.nnkwrik.kirinrpc"})
-@EnableConfigurationProperties(KirinConfigurationProperties.class)
-public class KirinAutoConfiguration {
+@ComponentScan(basePackages = {"io.github.nnkwrik.kirinrpc.springboot.config.provider"})
+@EnableConfigurationProperties(ProviderPropertiesConfig.class)
+public class KirinProviderAutoConfiguration {
 
 
-    private KirinConfigurationProperties configurationProperties;//配置文件配置的方式
+    private ProviderPropertiesConfig providerPropertiesConfig;//配置文件配置的方式
 
-    private KirinProvider providerAnnotationConfig;//注解配置的方式
+    private KirinProvider providerAnnotationConfig;//注解配置的方式,不存在注解配置时空对象
 
     @Autowired
-    public KirinAutoConfiguration(KirinConfigurationProperties configurationProperties, ApplicationContext context) {
-        this.configurationProperties = configurationProperties;
+    public KirinProviderAutoConfiguration(ProviderPropertiesConfig providerPropertiesConfig, ApplicationContext context) {
+        this.providerPropertiesConfig = providerPropertiesConfig;
 
         Map<String, Object> annotatedBeans = context.getBeansWithAnnotation(SpringBootApplication.class);
         Class<?> springBootstrap = annotatedBeans.values().toArray()[0].getClass().getSuperclass();
         this.providerAnnotationConfig = springBootstrap.getAnnotation(KirinProvider.class);
-
     }
 
     /**
@@ -46,13 +47,14 @@ public class KirinAutoConfiguration {
      * @return
      */
     @Bean
-    public ProviderConfiguration getProviderConfig() {
-        ProviderConfiguration config = configurationProperties.getProvider();
+    public ProviderConfig getProviderConfig() {
 
-        if (!config.isEnable()) {
+        if (!providerPropertiesConfig.isEnable()) {
             return null;
         }
 
+        ProviderConfig config = new ProviderConfig();
+        BeanUtils.copyProperties(providerPropertiesConfig, config);
 
         String name = config.getName();
         if (StringUtils.isEmpty(name)) {
@@ -71,21 +73,20 @@ public class KirinAutoConfiguration {
             config.setRegistryAddress(registryAddress);
         }
 
-        String serverAddress = config.getServerAddress();
-        if (StringUtils.isEmpty(serverAddress)){
+        String serverAddress = config.getProviderAddress();
+        if (StringUtils.isEmpty(serverAddress)) {
             serverAddress = providerAnnotationConfig.providerAddress();
-            config.setServerAddress(serverAddress);
+            config.setProviderAddress(serverAddress);
         }
 
-        Integer serverPort = config.getServerPort();
+        Integer serverPort = config.getProviderPort();
         if (serverPort == null) {
             serverPort = providerAnnotationConfig.providerPort();
-            config.setServerPort(serverPort);
+            config.setProviderPort(serverPort);
         }
 
-        log.info("Success to get provider configuration : " + config);
+        log.info("Success to load provider configuration : " + config);
         return config;
     }
-
 
 }
