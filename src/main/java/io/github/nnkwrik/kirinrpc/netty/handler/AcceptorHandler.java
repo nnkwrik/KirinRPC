@@ -76,18 +76,18 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
         Channel ch = ctx.channel();
 
         if (cause instanceof IdealStateException) {
-            log.error("IdealState exception exception was caught: {}, force to close channel: {}.", StackTraceUtil.stackTrace(cause), ch);
+            log.error("IdealState exception exception was caught, force to close channel: {}.\r\n{}", ch, StackTraceUtil.stackTrace(cause));
 
             ch.close();
         } else if (cause instanceof IOException) {
-            log.error("An I/O exception was caught: {}, force to close channel: {}.", StackTraceUtil.stackTrace(cause), ch);
+            log.error("An I/O exception was caught, force to close channel: {}.\r\n{}", ch, StackTraceUtil.stackTrace(cause));
 
             ch.close();
         } else if (cause instanceof DecoderException) {
-            log.error("Decoder exception was caught: {}, force to close channel: {}.", StackTraceUtil.stackTrace(cause), ch);
+            log.error("Decoder exception was caught, force to close channel: {}.\r\n{}", ch, StackTraceUtil.stackTrace(cause));
             ch.close();
         } else {
-            log.error("Unexpected exception was caught: {}, channel: {}.", StackTraceUtil.stackTrace(cause), ch);
+            log.error("Unexpected exception was caught, channel: {}.\r\n{}", ch, StackTraceUtil.stackTrace(cause));
         }
 
     }
