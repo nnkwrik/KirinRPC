@@ -45,6 +45,7 @@ public class ServiceBeanContainer implements ProviderLookup {
     @Override
     public ServiceWrapper lookupService(ServiceMeta serviceMeta) {
         Object serviceBean = serviceBeans.get(serviceMeta.getServiceGroup() + "/" + serviceMeta.getServiceName());
+        if (serviceBean == null) return null;
         return new ServiceWrapper(serviceBean);
     }
 }

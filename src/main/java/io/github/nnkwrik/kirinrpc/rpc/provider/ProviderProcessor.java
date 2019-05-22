@@ -71,7 +71,7 @@ public class ProviderProcessor implements RequestProcessor {
                 }
             }
         }
-        executor.submit(task);
+        executor.execute(task);
     }
 
 
@@ -97,7 +97,7 @@ public class ProviderProcessor implements RequestProcessor {
         @Override
         public void sendFailResponse(Channel channel, KirinRemoteException e) {
             final Long requestId = PayloadUtil.getRequestId(channel);
-            log.error("Excepted Error Happened when solve remote call (requestId = {}), {}.", requestId, StackTraceUtil.stackTrace(e));
+            log.error("Excepted Error Happened when solve remote call (requestId = {}):\r\n{}", requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
             response.setError(e);
@@ -113,7 +113,7 @@ public class ProviderProcessor implements RequestProcessor {
         @Override
         public void sendErrorResponse(Channel channel, KirinRemoteException e) {
             final Long requestId = PayloadUtil.getRequestId(channel);
-            log.error("Unknown Error happened when solve remote call (requestId = {}), {}.", requestId, StackTraceUtil.stackTrace(e));
+            log.error("Unknown Error happened when solve remote call (requestId = {}):\r\n{}", requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
             response.setError(e);

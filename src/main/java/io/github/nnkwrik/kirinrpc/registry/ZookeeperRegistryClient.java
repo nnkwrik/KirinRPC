@@ -123,7 +123,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                 if (event.getResultCode() == KeeperException.Code.OK.intValue()) {
                     registerMetaMap.put(meta, RegisterState.DONE);
                 }
-                log.info("Register: {} - {}.", meta, event);
+                log.info("Register on zookeeper: {} - {}.", meta, event);
             }).forPath(String.format("%s/%s",
                     directory,
                     JsonUtil.toJson(meta)));

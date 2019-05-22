@@ -7,7 +7,6 @@ import lombok.Data;
  * @author nnkwrik
  * @date 19/05/21 10:48
  */
-@Data
 public class KirinRemoteException extends RuntimeException {
 
     private Status status;
@@ -23,5 +22,14 @@ public class KirinRemoteException extends RuntimeException {
         this.status = status;
     }
 
+    public Status getStatus() {
+        return status;
+    }
 
+    @Override
+    public String toString() {
+        String s = getClass().getName() + "(status="+this.status+")";
+        String message = getLocalizedMessage();
+        return (message != null) ? (s + ": " + message) : s;
+    }
 }

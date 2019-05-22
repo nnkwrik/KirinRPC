@@ -40,52 +40,54 @@ public class RPCTask implements Runnable {
 
     @Override
     public void run() {
-
-        //反序列化获取Request对象
-        KirinRequest request;
         try {
-            request = SerializerHolder.serializerImpl().readObject(requestPayload.bytes(), KirinRequest.class);
+            //反序列化获取Request对象
+            KirinRequest request;
+            try {
+                request = SerializerHolder.serializerImpl().readObject(requestPayload.bytes(), KirinRequest.class);
+            } catch (Throwable t) {
+                String msg = "Can't solve request payload.Fail to deserialize.";
+                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, t, Status.BAD_REQUEST));
+                return;
+            }
+
+            //查找服务
+            final ServiceWrapper serviceProvider = providerLookup.lookupService(request.getServiceMeta());
+            if (serviceProvider == null) {
+                String msg = String.format("Can't lookup service provider for [serviceName = %s, serviceGroup = %s]",
+                        request.getServiceMeta().getServiceName(),
+                        request.getServiceMeta().getServiceGroup());
+                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, Status.SERVICE_NOT_FOUND));
+                return;
+            }
+
+            //调用服务方法
+            Object invokeResult;
+            try {
+                invokeResult = invoke(request, serviceProvider);
+            } catch (InvocationTargetException e) {
+                String msg = "Fail to invoke service for RPC request.";
+                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
+                return;
+            }
+
+            //发送invoke结果
+            try {
+                responseSender.sendSuccessResponse(channel, invokeResult);
+            } catch (IllegalStateException e) {
+                String msg = "Fail to serialize response.";
+                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
+                return;
+            } catch (Throwable t) {
+                String msg = "Fail to send response.";
+                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, t, Status.SERVICE_EXPECTED_ERROR));
+                return;
+            }
+
         } catch (Throwable t) {
-            String msg = "Can't solve request payload.Fail to deserialize.";
-            responseSender.sendFailResponse(channel, new KirinRemoteException(msg, t, Status.BAD_REQUEST));
-            return;
+            String msg = "Unknown error happened when run rpc task";
+            responseSender.sendErrorResponse(channel, new KirinRemoteException(msg, t, Status.SERVER_ERROR));
         }
-
-        //查找服务
-        final ServiceWrapper serviceProvider = providerLookup.lookupService(request.getServiceMeta());
-        if (serviceProvider == null) {
-            String msg = String.format("Can't lookup service provider for [serviceName = %s, serviceGroup = %s]",
-                    request.getServiceMeta().getServiceName(),
-                    request.getServiceMeta().getServiceGroup());
-            responseSender.sendFailResponse(channel, new KirinRemoteException(msg, Status.SERVICE_NOT_FOUND));
-            return;
-        }
-
-
-        //调用服务方法
-        Object invokeResult;
-        try {
-            invokeResult = invoke(request, serviceProvider);
-        } catch (InvocationTargetException e) {
-            String msg = "Fail to invoke service for RPC request.";
-            responseSender.sendFailResponse(channel, new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
-            return;
-        }
-
-        //发送invoke结果
-        try {
-            responseSender.sendSuccessResponse(channel, invokeResult);
-        } catch (IllegalStateException e) {
-            String msg = "Fail to serialize response.";
-            responseSender.sendFailResponse(channel, new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
-            return;
-        } catch (Throwable t) {
-            String msg = "Fail to send response.";
-            responseSender.sendFailResponse(channel, new KirinRemoteException(msg, t, Status.SERVICE_EXPECTED_ERROR));
-            return;
-        }
-
-
     }
 
 
@@ -108,11 +110,7 @@ public class RPCTask implements Runnable {
         //Cglib reflect
         FastClass providerFastClass = FastClass.create(providerClass);
         int methodIndex = providerFastClass.getIndex(methodName, argTypes);
-        Object invokeResult = providerFastClass.invoke(methodIndex, provider, args);
-        log.debug("Success to invoke service for RPC request(requestId = {}). result = [{}]",
-                PayloadUtil.getRequestId(channel), invokeResult);
-        return invokeResult;
-
+        return providerFastClass.invoke(methodIndex, provider, args);
     }
 
 }
