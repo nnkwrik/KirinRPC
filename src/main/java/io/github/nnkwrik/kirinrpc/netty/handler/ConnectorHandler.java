@@ -27,6 +27,7 @@ public class ConnectorHandler extends ChannelInboundHandlerAdapter {
         ResponsePayload responsePayload = (ResponsePayload) msg;
         KirinResponse response = SerializerHolder.serializerImpl().readObject(responsePayload.bytes(), KirinResponse.class);
 
-        System.out.println(response);
+        System.out.println("==== " + response);
+        ctx.channel().close();
     }
 }
