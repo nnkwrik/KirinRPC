@@ -12,3 +12,4 @@
 logging:
   level:
     io.github.nnkwrik.kirinrpc: debug
+    org.springframework.beans.factory: debug
