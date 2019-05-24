@@ -60,7 +60,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
         List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(providerConfig.getName(), serviceBeanMap.values());
 
         //创建远程注册中心连接
-        registryClient = RegistryFactory.getInstance(providerConfig.getRegistryAddress());
+        registryClient = RegistryFactory.getConnectedInstance(providerConfig.getRegistryAddress());
 
         List<RegisterMeta> registerMetas = serviceMetas.stream()
                 .map(s -> {

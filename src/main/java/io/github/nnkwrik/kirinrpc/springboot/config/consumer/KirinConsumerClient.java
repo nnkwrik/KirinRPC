@@ -1,6 +1,7 @@
 package io.github.nnkwrik.kirinrpc.springboot.config.consumer;
 
 import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
+import io.github.nnkwrik.kirinrpc.registry.RegistryFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -29,10 +30,11 @@ public class KirinConsumerClient implements ApplicationContextAware, Initializin
         if (consumerConfig == null) {
             return;
         }
-        init();
+        initRegistry();
     }
 
-    private void init() {
+    private void initRegistry() {
+        this.registryClient = RegistryFactory.getConnectedInstance(consumerConfig.getRegistryAddress());
 
     }
 

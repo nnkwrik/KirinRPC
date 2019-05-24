@@ -3,6 +3,7 @@ package io.github.nnkwrik.kirinrpc.registry.model;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
@@ -21,11 +22,14 @@ public class RegisterMeta {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @EqualsAndHashCode
     public static class Address {
         // 地址
         private String host;
         // 端口
         private int port;
+
+
     }
 
 }

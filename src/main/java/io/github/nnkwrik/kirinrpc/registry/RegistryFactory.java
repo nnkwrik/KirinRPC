@@ -1,5 +1,7 @@
 package io.github.nnkwrik.kirinrpc.registry;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -10,8 +12,13 @@ import java.util.concurrent.ConcurrentMap;
 public class RegistryFactory {
     private static ConcurrentMap<String, RegistryClient> registryMap = new ConcurrentHashMap<>();
 
-    public static RegistryClient getInstance(String registryAddr) {
-        registryMap.putIfAbsent(registryAddr, new ZookeeperRegistryClient(registryAddr));
-        return registryMap.get(registryAddr);
+    public static RegistryClient getConnectedInstance(String registryAddr) {
+        RegistryClient registryClient = registryMap.putIfAbsent(registryAddr,new ZookeeperRegistryClient(registryAddr));
+        if (registryClient == null){
+            //添加进去了新的
+            registryClient = registryMap.get(registryAddr);
+            registryClient.connect(registryAddr);
+        }
+        return registryClient;
     }
 }

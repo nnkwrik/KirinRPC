@@ -1,17 +1,23 @@
 package io.github.nnkwrik.kirinrpc.registry;
 
 import io.github.nnkwrik.kirinrpc.common.util.JsonUtil;
+import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
+import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,12 +47,19 @@ public class ZookeeperRegistryClient implements RegistryClient {
     // Provider已发布的注册信息
     private final ConcurrentMap<RegisterMeta, RegisterState> registerMetaMap = new ConcurrentHashMap<>();
 
+    //服务都绑定了哪些listener
+    private final ConcurrentMap<ServiceMeta, CopyOnWriteArrayList<NotifyListener>> subscribeListeners = new ConcurrentHashMap<>();
+    //服务对应的zookeeper 路径信息
+    private final ConcurrentMap<ServiceMeta, PathChildrenCache> pathChildrenCaches = new ConcurrentHashMap<>();
+    //指定节点都提供了哪些服务
+    private final ConcurrentMap<RegisterMeta.Address, Set<ServiceMeta>> serviceMetaMap = new ConcurrentHashMap<>();
+
     public ZookeeperRegistryClient(String registryAddress) {
         this.registryAddress = registryAddress;
-        connect();
     }
 
-    private void connect() {
+    @Override
+    public void connect(String registryAddr) {
         configClient = CuratorFrameworkFactory.newClient(
                 registryAddress, sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(500, 20));
 
@@ -80,7 +93,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
             while (!shutdown.get()) {
                 RegisterMeta meta = null;
                 try {
-                    meta = metaQueue.poll(5,TimeUnit.SECONDS);
+                    meta = metaQueue.poll(5, TimeUnit.SECONDS);
                     if (meta == null) break; //5秒内没有获取到需要注册的meta，说明所有meta都已经注册成功。
                     registerMetaMap.put(meta, RegisterState.PREPARE);
                     createNode(meta);
@@ -129,9 +142,132 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     JsonUtil.toJson(meta)));
         } catch (Exception e) {
             if (log.isWarnEnabled()) {
-                log.warn("Create addServiceBean meta: {} path failed, {}.", meta, e.getStackTrace());
+                log.warn("Create addServiceBean meta: {} path failed, {}.", meta, StackTraceUtil.stackTrace(e));
             }
         }
 
     }
+
+    @Override
+    public void subscribe(ServiceMeta serviceMeta, NotifyListener listener) {
+        CopyOnWriteArrayList<NotifyListener> listeners = subscribeListeners.get(serviceMeta);
+        if (listeners == null) {
+            CopyOnWriteArrayList<NotifyListener> newListeners = new CopyOnWriteArrayList<>();
+            listeners = subscribeListeners.putIfAbsent(serviceMeta, newListeners);
+            if (listeners == null) {
+                listeners = newListeners;
+            }
+        }
+        listeners.add(listener);
+        watchNode(serviceMeta);
+    }
+
+    private void watchNode(final ServiceMeta meta) {
+
+        PathChildrenCache newPathChildren = createNewPathChildren(meta);
+        if (newPathChildren == null) return;
+
+        //创建了新的newPathChildren
+        newPathChildren.getListenable().addListener((client, event) -> {
+
+            log.info("Child event: {}", event);
+
+            switch (event.getType()) {
+                case CHILD_ADDED: {
+                    //获取新添加的服务信息
+                    RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
+                    ServiceMeta serviceMeta = registerMeta.getServiceMeta();
+
+                    //作为address对应的服务添加到添加到map里
+                    RegisterMeta.Address address = registerMeta.getAddress();
+                    Set<ServiceMeta> serviceMetaSet = getServiceMeta(address);
+                    serviceMetaSet.add(serviceMeta);
+
+                    //通知该服务绑定的listener，告诉他们address开始提供服务
+                    notify(serviceMeta, NotifyListener.NotifyEvent.CHILD_ADDED, registerMeta);
+
+                    break;
+                }
+                case CHILD_REMOVED: {
+                    //获取要移除的服务信息
+                    RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
+                    ServiceMeta serviceMeta = registerMeta.getServiceMeta();
+
+                    //从address对应的服务里面移除
+                    RegisterMeta.Address address = registerMeta.getAddress();
+                    Set<ServiceMeta> serviceMetaSet = getServiceMeta(address);
+                    serviceMetaSet.remove(serviceMeta);
+
+                    //通知该服务绑定的listener，告诉他们address停止提供服务
+                    notify(serviceMeta, NotifyListener.NotifyEvent.CHILD_REMOVED, registerMeta);
+
+                    //address下已经不提供任何服务
+                    if (serviceMetaSet.isEmpty()) {
+                        log.info("Offline notify: {}.", address);
+                    }
+
+                    break;
+                }
+            }
+        });
+    }
+
+    private PathChildrenCache createNewPathChildren(ServiceMeta serviceMeta) {
+        if (!pathChildrenCaches.containsKey(serviceMeta)) return null;
+
+        String directory = String.format("/kirinrpc/%s/%s",
+                serviceMeta.getServiceGroup(),
+                serviceMeta.getServiceName());
+        PathChildrenCache newChildrenCache = new PathChildrenCache(configClient, directory, false);
+
+        if (pathChildrenCaches.putIfAbsent(serviceMeta, newChildrenCache) != null) {
+            //新创建的PathChildrenCache没有用上 （putIfAbsent失败了）
+            try {
+                newChildrenCache.close();
+                return null;
+            } catch (IOException e) {
+                if (log.isWarnEnabled()) {
+                    log.warn("Close [PathChildrenCache] {} failed, {}.", directory, StackTraceUtil.stackTrace(e));
+                }
+            }
+        }
+
+        return newChildrenCache;
+    }
+
+    private RegisterMeta parseRegisterMeta(String data) {
+        String[] array_0 = data.split("/");
+        return JsonUtil.fromJson(array_0[3], RegisterMeta.class);
+    }
+
+    private Set<ServiceMeta> getServiceMeta(RegisterMeta.Address address) {
+        Set<ServiceMeta> serviceMetaSet = serviceMetaMap.get(address);
+        if (serviceMetaSet == null) {
+            Set<ServiceMeta> newServiceMetaSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
+            serviceMetaSet = serviceMetaMap.putIfAbsent(address, newServiceMetaSet);
+            if (serviceMetaSet == null) {
+                serviceMetaSet = newServiceMetaSet;
+            }
+        }
+        return serviceMetaSet;
+    }
+
+    // 通知新增或删除服务
+    private void notify(ServiceMeta serviceMeta, NotifyListener.NotifyEvent event, RegisterMeta... array) {
+
+        if (array == null || array.length == 0) {
+            return;
+        }
+
+        CopyOnWriteArrayList<NotifyListener> listeners = subscribeListeners.get(serviceMeta);
+        if (listeners != null) {
+            for (NotifyListener l : listeners) {
+                for (RegisterMeta m : array) {
+                    l.notify(m, event);
+                }
+            }
+        }
+    }
+
+
 }
