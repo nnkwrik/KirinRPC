@@ -2,8 +2,7 @@ package io.github.nnkwrik.kirinrpc.rpc.provider;
 
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceWrapper;
-import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderLookup;
-import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
+import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvideService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class ServiceBeanContainer implements ProviderLookup {
             List<String> interfaceName = Arrays.stream(serviceBean.getClass().getInterfaces())
                     .map(Class::getName).collect(Collectors.toList());
 
-            String serviceGroup = serviceBean.getClass().getAnnotation(KirinProviderService.class).group();
+            String serviceGroup = serviceBean.getClass().getAnnotation(KirinProvideService.class).group();
             interfaceName.stream().forEach(serviceName -> {
                 log.info("Loading service: {} ,group : {}", serviceName, serviceGroup);
                 ServiceMeta serviceMeta = new ServiceMeta(appName, serviceName, serviceGroup);

@@ -1,7 +1,6 @@
 package io.github.nnkwrik.kirinrpc.springboot.config.provider;
 
 import io.github.nnkwrik.kirinrpc.common.util.Requires;
-import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinConsumer;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

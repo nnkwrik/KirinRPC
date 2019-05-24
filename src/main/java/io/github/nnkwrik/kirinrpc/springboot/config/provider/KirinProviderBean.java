@@ -2,13 +2,12 @@ package io.github.nnkwrik.kirinrpc.springboot.config.provider;
 
 import io.github.nnkwrik.kirinrpc.common.util.NetUtils;
 import io.github.nnkwrik.kirinrpc.netty.srv.KirinServerAcceptor;
-import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
-import io.github.nnkwrik.kirinrpc.registry.ZookeeperRegistryClient;
-import io.github.nnkwrik.kirinrpc.rpc.provider.ServiceBeanContainer;
+import io.github.nnkwrik.kirinrpc.registry.RegistryFactory;
+import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
-import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProviderService;
-import io.github.nnkwrik.kirinrpc.springboot.config.provider.ProviderConfig;
+import io.github.nnkwrik.kirinrpc.rpc.provider.ServiceBeanContainer;
+import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvideService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -55,13 +54,13 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
 
     private void initRegistry() {
         this.serviceContainer = new ServiceBeanContainer();
-        Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(KirinProviderService.class);
+        Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(KirinProvideService.class);
         if (serviceBeanMap == null || serviceBeanMap.isEmpty()) return;
         //放入提供者容器
-        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(providerConfig.getName(),serviceBeanMap.values());
+        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(providerConfig.getName(), serviceBeanMap.values());
 
         //创建远程注册中心连接
-        registryClient = new ZookeeperRegistryClient(providerConfig.getRegistryAddress());
+        registryClient = RegistryFactory.getInstance(providerConfig.getRegistryAddress());
 
         List<RegisterMeta> registerMetas = serviceMetas.stream()
                 .map(s -> {
