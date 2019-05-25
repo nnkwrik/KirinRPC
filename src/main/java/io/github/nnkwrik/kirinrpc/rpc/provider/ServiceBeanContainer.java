@@ -30,7 +30,7 @@ public class ServiceBeanContainer implements ProviderLookup {
 
             String serviceGroup = serviceBean.getClass().getAnnotation(KirinProvideService.class).group();
             interfaceName.stream().forEach(serviceName -> {
-                log.info("Loading service: {} ,group : {}", serviceName, serviceGroup);
+                log.info("Loading service: {} ,addressChannel : {}", serviceName, serviceGroup);
                 ServiceMeta serviceMeta = new ServiceMeta(appName, serviceName, serviceGroup);
                 String serviceKey = serviceGroup + "/" + serviceName;
                 this.serviceBeans.put(serviceKey, serviceBean);

@@ -1,5 +1,7 @@
 package io.github.nnkwrik.kirinrpc.netty.cli;
 
+import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
+import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -10,6 +12,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.internal.PlatformDependent;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -24,6 +31,12 @@ public abstract class NettyConnector {
     private int nWorkers;
     private EventLoopGroup worker;
     protected volatile ByteBufAllocator allocator;
+
+    //address对应的channel连接
+    private final ConcurrentMap<RegisterMeta.Address, Channel> addressChannelMap = new ConcurrentHashMap<>();
+    //服务和提供该服务提供者channel.
+    private final ConcurrentMap<ServiceMeta, Set<Channel>> serviceChannels = new ConcurrentHashMap<>();
+
 
     public NettyConnector() {
         this(Runtime.getRuntime().availableProcessors() << 1);
@@ -49,6 +62,31 @@ public abstract class NettyConnector {
         log.info("netty client connector completed initialization.");
     }
 
-    public abstract Channel connect(String host,int port) throws InterruptedException;
+
+    public Channel getChannelWithAddress(RegisterMeta.Address address) {
+        Channel channel = addressChannelMap.get(address);
+        if (addressChannelMap.get(address) == null) {
+            Channel newChannel = connect(address.getHost(), address.getPort());
+            channel = addressChannelMap.putIfAbsent(address, newChannel);
+            if (channel == null) {
+                channel = newChannel;
+            }
+        }
+        return channel;
+    }
+
+    public Set<Channel> getProviderChannel(ServiceMeta serviceMeta) {
+        Set<Channel> channels = serviceChannels.get(serviceMeta);
+        if (channels == null) {
+            Set<Channel> newChannels = Collections.newSetFromMap(new ConcurrentHashMap<>());
+            channels = serviceChannels.putIfAbsent(serviceMeta, newChannels);
+            if (channels == null) {
+                channels = newChannels;
+            }
+        }
+        return channels;
+    }
+
+    public abstract Channel connect(String host, int port);
 
 }

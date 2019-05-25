@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
@@ -42,9 +44,11 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
  */
 @Component
 public class KirinAutowiredAnnotationBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter
-        implements MergedBeanDefinitionPostProcessor, PriorityOrdered {
+        implements MergedBeanDefinitionPostProcessor, PriorityOrdered, ApplicationContextAware {
 
     private final Log logger = LogFactory.getLog(getClass());
+
+    private ApplicationContext applicationContext;
 
     private final ConcurrentMap<String, ConsumerInjectionMetadata> injectionMetadataCache =
             new ConcurrentHashMap<>(256);
@@ -52,6 +56,10 @@ public class KirinAutowiredAnnotationBeanPostProcessor extends InstantiationAwar
     private final ConcurrentMap<String, KirinConsumerBean<?>> consumerBeansCache =
             new ConcurrentHashMap<>();
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     @Override
     public int getOrder() {
@@ -281,7 +289,8 @@ public class KirinAutowiredAnnotationBeanPostProcessor extends InstantiationAwar
 
         if (consumerBean == null) {
 
-            consumerBean = new KirinConsumerBean<>(consumerClass, consumeServiceAnnotation);
+            ConsumerConfig consumerConfig = applicationContext.getBean(ConsumerConfig.class);
+            consumerBean = new KirinConsumerBean<>(consumerConfig, consumerClass, consumeServiceAnnotation);
 
             consumerBeansCache.putIfAbsent(consumerBeanCacheKey, consumerBean);
         }

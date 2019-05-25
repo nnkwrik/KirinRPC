@@ -26,7 +26,7 @@ public class KirinClientConnector extends NettyConnector {
 
 
     @Override
-    public Channel connect(String host,int port) throws InterruptedException {
+    public Channel connect(String host,int port) {
         bootstrap.channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
@@ -43,7 +43,12 @@ public class KirinClientConnector extends NettyConnector {
                     }
                 });
 
-        ChannelFuture future = bootstrap.connect(host, port).sync();
+        ChannelFuture future = null;
+        try {
+            future = bootstrap.connect(host, port).sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         return future.channel();
     }

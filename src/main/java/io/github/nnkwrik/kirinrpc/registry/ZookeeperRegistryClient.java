@@ -213,7 +213,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
     }
 
     private PathChildrenCache createNewPathChildren(ServiceMeta serviceMeta) {
-        if (!pathChildrenCaches.containsKey(serviceMeta)) return null;
+        if (pathChildrenCaches.containsKey(serviceMeta)) return null;
 
         String directory = String.format("/kirinrpc/%s/%s",
                 serviceMeta.getServiceGroup(),

@@ -15,7 +15,7 @@ public class RegistryFactory {
     public static RegistryClient getConnectedInstance(String registryAddr) {
         RegistryClient registryClient = registryMap.putIfAbsent(registryAddr,new ZookeeperRegistryClient(registryAddr));
         if (registryClient == null){
-            //添加进去了新的
+            //添加了新的registryClient
             registryClient = registryMap.get(registryAddr);
             registryClient.connect(registryAddr);
         }
