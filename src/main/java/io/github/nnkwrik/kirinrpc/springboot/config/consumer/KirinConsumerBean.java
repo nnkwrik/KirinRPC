@@ -45,7 +45,6 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
         ServiceMeta serviceMeta = new ServiceMeta(consumerInterface.getName(), consumeServiceAnnotation.group());
         registryClient.subscribe(serviceMeta, new NotifyListener() {
             //TODO 与所有服务提供者建立连接完毕之前进行阻塞
-            //TODO 这个方法不被调用。可能是添加了listener的zookeeper path不对？
             @Override
             public void notify(RegisterMeta registerMeta, NotifyEvent event) {
                 if (event == NotifyEvent.CHILD_ADDED) {

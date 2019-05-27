@@ -30,7 +30,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
     private String registryAddress;
 
     //zk客户端
-    public CuratorFramework configClient; //TODO should be private
+    private CuratorFramework configClient;
     private final int sessionTimeoutMs = 60 * 1000;
     private final int connectionTimeoutMs = 15 * 1000;
 
