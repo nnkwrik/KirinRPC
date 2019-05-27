@@ -25,6 +25,7 @@ package io.github.nnkwrik.kirinrpc.netty.protocol;
  */
 public class ProtocolHeader {
 
+    public static final int HEADER_SIZE = 16;
 
     public static final short MAGIC = (short) 0x70bb;
 

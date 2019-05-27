@@ -1,14 +1,14 @@
 package io.github.nnkwrik.kirinrpc.netty.cli;
 
-import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdealStateTrigger;
-import io.github.nnkwrik.kirinrpc.netty.handler.ConnectorHandler;
-import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
-import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
+import io.github.nnkwrik.kirinrpc.netty.handler.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author nnkwrik
@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class KirinClientConnector extends NettyConnector {
-    //处理心跳超时
-    private AcceptorIdealStateTrigger idleStateTrigger = new AcceptorIdealStateTrigger();
+    //定期发送心跳包
+    private ConnectorIdealStateTrigger idealStateTrigger = new ConnectorIdealStateTrigger();
     //编码器
     private final ProtocolEncoder encoder = new ProtocolEncoder();
 
@@ -33,9 +33,9 @@ public class KirinClientConnector extends NettyConnector {
                     protected void initChannel(NioSocketChannel ch) throws Exception {
                         ch.pipeline().addLast(
                                 //每隔30s的时间触发一次userEventTriggered的方法，并且指定IdleState的状态位是WRITER_IDLE
-//                                new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS),
+                                new IdleStateHandler(0, 10, 0, TimeUnit.SECONDS),
                                 //实现userEventTriggered方法，并在state是WRITER_IDLE的时候发送一个心跳包到sever端，告诉server端我还活着
-//                                idleStateTrigger,
+                                idealStateTrigger,
                                 new ProtocolDecoder(),
                                 encoder,
                                 handler

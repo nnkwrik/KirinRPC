@@ -63,19 +63,29 @@ public abstract class NettyConnector {
     }
 
 
-    public Channel getChannelWithAddress(RegisterMeta.Address address) {
+    public Channel createConnectionWithAddress(RegisterMeta.Address address) {
         Channel channel = addressChannelMap.get(address);
         if (addressChannelMap.get(address) == null) {
             Channel newChannel = connect(address.getHost(), address.getPort());
             channel = addressChannelMap.putIfAbsent(address, newChannel);
             if (channel == null) {
                 channel = newChannel;
+            } else {
+                channel.close();
             }
         }
         return channel;
     }
 
-    public Set<Channel> getProviderChannel(ServiceMeta serviceMeta) {
+    public Channel closeConnectionWithAddress(RegisterMeta.Address address) {
+        Channel channel = addressChannelMap.get(address);
+        if (channel != null) {
+            channel.close();
+        }
+        return channel;
+    }
+
+    public Set<Channel> getProviderConnections(ServiceMeta serviceMeta) {
         Set<Channel> channels = serviceChannels.get(serviceMeta);
         if (channels == null) {
             Set<Channel> newChannels = Collections.newSetFromMap(new ConcurrentHashMap<>());

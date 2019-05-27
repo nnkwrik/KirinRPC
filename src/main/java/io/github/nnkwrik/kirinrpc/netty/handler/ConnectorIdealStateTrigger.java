@@ -1,5 +1,6 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
+import io.github.nnkwrik.kirinrpc.netty.protocol.Heartbeats;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -19,8 +20,8 @@ public class ConnectorIdealStateTrigger extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             IdleState state = ((IdleStateEvent) evt).state();
             if (state == IdleState.WRITER_IDLE) {
-                log.info("need send heartbeats");
-//                ctx.writeAndFlush(Heartbeats.heartbeatContent());
+                log.debug("Send heartbeat to provider.");
+                ctx.writeAndFlush(Heartbeats.heartbeatContent());
             }
         } else {
             super.userEventTriggered(ctx, evt);
