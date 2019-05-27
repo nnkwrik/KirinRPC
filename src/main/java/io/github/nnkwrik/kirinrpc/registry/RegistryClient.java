@@ -11,11 +11,11 @@ import java.util.List;
  */
 public interface RegistryClient {
 
-    void connect(String registryAddr);
+    void connect();
 
     void register(List<RegisterMeta> registerMetas);
 
-    void subscribe(ServiceMeta serviceMeta,NotifyListener listener);
+    void subscribe(ServiceMeta serviceMeta, NotifyListener listener);
 
     enum RegisterState {
         PREPARE,

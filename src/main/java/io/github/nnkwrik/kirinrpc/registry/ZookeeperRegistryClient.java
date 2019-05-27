@@ -30,7 +30,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
     private String registryAddress;
 
     //zk客户端
-    private CuratorFramework configClient;
+    public CuratorFramework configClient; //TODO should be private
     private final int sessionTimeoutMs = 60 * 1000;
     private final int connectionTimeoutMs = 15 * 1000;
 
@@ -59,7 +59,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
     }
 
     @Override
-    public void connect(String registryAddr) {
+    public void connect() {
         configClient = CuratorFrameworkFactory.newClient(
                 registryAddress, sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(500, 20));
 
@@ -170,12 +170,17 @@ public class ZookeeperRegistryClient implements RegistryClient {
         //创建了新的newPathChildren
         newPathChildren.getListenable().addListener((client, event) -> {
 
+            RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
+            if (registerMeta == null) {
+                //json解析失败
+                return;
+            }
+
             log.info("Child event: {}", event);
 
             switch (event.getType()) {
                 case CHILD_ADDED: {
                     //获取新添加的服务信息
-                    RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
                     ServiceMeta serviceMeta = registerMeta.getServiceMeta();
 
                     //作为address对应的服务添加到添加到map里
@@ -190,7 +195,6 @@ public class ZookeeperRegistryClient implements RegistryClient {
                 }
                 case CHILD_REMOVED: {
                     //获取要移除的服务信息
-                    RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
                     ServiceMeta serviceMeta = registerMeta.getServiceMeta();
 
                     //从address对应的服务里面移除
@@ -210,6 +214,14 @@ public class ZookeeperRegistryClient implements RegistryClient {
                 }
             }
         });
+
+        try {
+            newPathChildren.start();
+        } catch (Exception e) {
+            if (log.isWarnEnabled()) {
+                log.warn("Subscribe failed, {}.", StackTraceUtil.stackTrace(e));
+            }
+        }
     }
 
     private PathChildrenCache createNewPathChildren(ServiceMeta serviceMeta) {
@@ -237,7 +249,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
 
     private RegisterMeta parseRegisterMeta(String data) {
         String[] array_0 = data.split("/");
-        return JsonUtil.fromJson(array_0[3], RegisterMeta.class);
+        return JsonUtil.fromJson(array_0[4], RegisterMeta.class);
     }
 
     private Set<ServiceMeta> getServiceMeta(RegisterMeta.Address address) {

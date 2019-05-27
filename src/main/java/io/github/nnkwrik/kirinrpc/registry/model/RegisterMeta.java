@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterMeta {
+    private String appName;
     // 地址
     private Address address = new Address();
     // metadata

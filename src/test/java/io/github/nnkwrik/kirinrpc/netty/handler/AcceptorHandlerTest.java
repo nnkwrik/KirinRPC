@@ -1,18 +1,13 @@
 package io.github.nnkwrik.kirinrpc.netty.handler;
 
 import io.github.nnkwrik.kirinrpc.common.Constants;
-import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.netty.cli.KirinClientConnector;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
-import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
-import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
 import io.netty.channel.Channel;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class AcceptorHandlerTest {
 
@@ -22,7 +17,7 @@ public class AcceptorHandlerTest {
 
         KirinRequest request = new KirinRequest();
         request.setAppName("appName");
-        request.setServiceMeta(new ServiceMeta("appName","io.github.nnkwrik.kirinrpc.demo.api.HelloWorldService", Constants.ANY_GROUP));
+        request.setServiceMeta(new ServiceMeta("io.github.nnkwrik.kirinrpc.demo.api.HelloWorldService", Constants.ANY_GROUP));
         request.setMethodName("sayHello");
         request.setArgTypes(new Class[]{String.class});
         request.setArgs(new Object[]{"tom"});
@@ -43,7 +38,7 @@ public class AcceptorHandlerTest {
 
         KirinRequest request = new KirinRequest();
         request.setAppName("appName");
-        request.setServiceMeta(new ServiceMeta("appName","not.exist.service", Constants.ANY_GROUP));
+        request.setServiceMeta(new ServiceMeta("not.exist.service", Constants.ANY_GROUP));
         request.setMethodName("sayHello");
         request.setArgTypes(new Class[]{String.class});
         request.setArgs(new Object[]{"tom"});
@@ -64,7 +59,7 @@ public class AcceptorHandlerTest {
 
 
         RequestPayload requestPayload = new RequestPayload(1);
-        requestPayload.bytes(new byte[]{0x00,0x11});
+        requestPayload.bytes(new byte[]{0x00, 0x11});
 
         Channel channel = kirinClientConnector.connect("127.0.0.1", 7070);
         channel.writeAndFlush(requestPayload);

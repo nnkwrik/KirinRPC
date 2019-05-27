@@ -57,7 +57,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
         Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(KirinProvideService.class);
         if (serviceBeanMap == null || serviceBeanMap.isEmpty()) return;
         //放入提供者容器
-        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(providerConfig.getName(), serviceBeanMap.values());
+        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(serviceBeanMap.values());
 
         //创建远程注册中心连接
         registryClient = RegistryFactory.getConnectedInstance(providerConfig.getRegistryAddress());
@@ -66,7 +66,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
                 .map(s -> {
                     RegisterMeta.Address address =
                             new RegisterMeta.Address(serverAddress.getAddress().getHostAddress(), serverAddress.getPort());
-                    return new RegisterMeta(address, s);
+                    return new RegisterMeta(providerConfig.getName(), address, s);
                 })
                 .collect(Collectors.toList());
 

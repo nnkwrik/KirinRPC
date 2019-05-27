@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class ServiceMeta {
-    private String appName;
     //服务接口名
     private String serviceName;
     //筛选

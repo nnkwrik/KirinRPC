@@ -1,5 +1,6 @@
 package io.github.nnkwrik.kirinrpc.springboot.config.consumer;
 
+import io.github.nnkwrik.kirinrpc.netty.cli.KirinClientConnector;
 import io.github.nnkwrik.kirinrpc.netty.cli.NettyConnector;
 import io.github.nnkwrik.kirinrpc.registry.NotifyListener;
 import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
@@ -29,36 +30,37 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
 
     private RegistryClient registryClient;
 
-    private NettyConnector connector;
+    private NettyConnector nettyConnector;
 
     public KirinConsumerBean(ConsumerConfig consumerConfig, Class<T> consumerInterface, KirinConsumeService consumeServiceAnnotation) {
         this.consumerConfig = consumerConfig;
         this.consumerInterface = consumerInterface;
         this.consumeServiceAnnotation = consumeServiceAnnotation;
         this.registryClient = RegistryFactory.getConnectedInstance(consumerConfig.getRegistryAddress());
+        this.nettyConnector = new KirinClientConnector();
     }
 
     @Override
     public T getObject() throws Exception {
-        ServiceMeta serviceMeta = new ServiceMeta(consumerConfig.getName(), consumerInterface.getName(), consumeServiceAnnotation.group());
+        ServiceMeta serviceMeta = new ServiceMeta(consumerInterface.getName(), consumeServiceAnnotation.group());
         registryClient.subscribe(serviceMeta, new NotifyListener() {
             //TODO 与所有服务提供者建立连接完毕之前进行阻塞
             //TODO 这个方法不被调用。可能是添加了listener的zookeeper path不对？
             @Override
             public void notify(RegisterMeta registerMeta, NotifyEvent event) {
                 if (event == NotifyEvent.CHILD_ADDED) {
-                    log.info("service {} has a new provider.provider address is {}",registerMeta.getServiceMeta(),registerMeta.getAddress());
+                    log.info("service {} has a new provider.provider address is {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
                     //拿到与该提供者的channel，如果没有与这个提供者的channel则创建
-                    Channel connection = connector.getChannelWithAddress(registerMeta.getAddress());
-                    Set<Channel> providerChannels = connector.getProviderChannel(registerMeta.getServiceMeta());
+                    Channel connection = nettyConnector.getChannelWithAddress(registerMeta.getAddress());
+                    Set<Channel> providerChannels = nettyConnector.getProviderChannel(registerMeta.getServiceMeta());
                     providerChannels.add(connection);
 
                 } else if (event == NotifyEvent.CHILD_REMOVED) {
-                    log.info("service {} reduced a provider.provider address was {}",registerMeta.getServiceMeta(),registerMeta.getAddress());
+                    log.info("service {} reduced a provider.provider address was {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
-                    Channel connection = connector.getChannelWithAddress(registerMeta.getAddress());
-                    Set<Channel> providerChannels = connector.getProviderChannel(registerMeta.getServiceMeta());
+                    Channel connection = nettyConnector.getChannelWithAddress(registerMeta.getAddress());
+                    Set<Channel> providerChannels = nettyConnector.getProviderChannel(registerMeta.getServiceMeta());
                     providerChannels.remove(connection);
 
                     if (providerChannels.size() <= 0) {
