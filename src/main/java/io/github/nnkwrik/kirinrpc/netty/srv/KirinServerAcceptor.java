@@ -1,9 +1,9 @@
 package io.github.nnkwrik.kirinrpc.netty.srv;
 
-import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorHandler;
-import io.github.nnkwrik.kirinrpc.netty.handler.AcceptorIdealStateTrigger;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
+import io.github.nnkwrik.kirinrpc.netty.handler.srv.AcceptorHandler;
+import io.github.nnkwrik.kirinrpc.netty.handler.srv.AcceptorIdealStateTrigger;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderProcessor;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ServiceBeanContainer;
 import io.netty.channel.ChannelFuture;
@@ -53,7 +53,7 @@ public class KirinServerAcceptor extends NettyAcceptor {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(
                                 //每隔60s的时间内如果没有接受到任何的read事件的话，则会触发userEventTriggered事件，并指定IdleState的类型为READER_IDLE
-                                new IdleStateHandler(20, 0, 0, TimeUnit.SECONDS),
+                                new IdleStateHandler(60, 0, 0, TimeUnit.SECONDS),
                                 //因为我们在client端设置了每隔30s会发送一个心跳包过来，如果60s都没有收到心跳，则说明链路发生了问题
                                 idleStateTrigger,
                                 new ProtocolDecoder(),
@@ -65,7 +65,7 @@ public class KirinServerAcceptor extends NettyAcceptor {
 
         ChannelFuture future = bootstrap.bind(serverAddress).sync();
 
-        log.info("netty acceptor server start.");
+        log.info("netty srv server start.");
 
         if (sync) {
             future.channel().closeFuture().sync();//把主线程wait

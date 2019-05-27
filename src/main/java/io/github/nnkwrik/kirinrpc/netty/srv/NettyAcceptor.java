@@ -92,7 +92,7 @@ public abstract class NettyAcceptor {
                  */
                 .childOption(ChannelOption.ALLOW_HALF_CLOSURE, false);
 
-        log.info("netty server acceptor completed initialization.");
+        log.info("netty server srv completed initialization.");
     }
 
     public abstract void start(boolean sync) throws InterruptedException;

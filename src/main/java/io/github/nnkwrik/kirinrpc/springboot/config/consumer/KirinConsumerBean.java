@@ -51,15 +51,15 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
                     log.info("service {} has a new provider.provider address is {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
                     //拿到与该提供者的channel，如果没有与这个提供者的channel则创建
-                    Channel connection = nettyConnector.getChannelWithAddress(registerMeta.getAddress());
-                    Set<Channel> providerChannels = nettyConnector.getProviderChannel(registerMeta.getServiceMeta());
+                    Channel connection = nettyConnector.createConnectionWithAddress(registerMeta.getAddress());
+                    Set<Channel> providerChannels = nettyConnector.getProviderConnections(registerMeta.getServiceMeta());
                     providerChannels.add(connection);
 
                 } else if (event == NotifyEvent.CHILD_REMOVED) {
                     log.info("service {} reduced a provider.provider address was {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
-                    Channel connection = nettyConnector.getChannelWithAddress(registerMeta.getAddress());
-                    Set<Channel> providerChannels = nettyConnector.getProviderChannel(registerMeta.getServiceMeta());
+                    Channel connection = nettyConnector.closeConnectionWithAddress(registerMeta.getAddress());
+                    Set<Channel> providerChannels = nettyConnector.getProviderConnections(registerMeta.getServiceMeta());
                     providerChannels.remove(connection);
 
                     if (providerChannels.size() <= 0) {

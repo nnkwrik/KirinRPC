@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.netty.handler;
+package io.github.nnkwrik.kirinrpc.netty.handler.srv;
 
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.netty.IdealStateException;

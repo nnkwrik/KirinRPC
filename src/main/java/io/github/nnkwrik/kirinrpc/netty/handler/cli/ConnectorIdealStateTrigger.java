@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.netty.handler;
+package io.github.nnkwrik.kirinrpc.netty.handler.cli;
 
 import io.github.nnkwrik.kirinrpc.netty.protocol.Heartbeats;
 import io.netty.channel.ChannelHandler;

@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.netty.handler;
+package io.github.nnkwrik.kirinrpc.netty.handler.cli;
 
 import io.github.nnkwrik.kirinrpc.common.Constants;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;

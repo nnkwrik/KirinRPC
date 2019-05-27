@@ -1,8 +1,14 @@
 package io.github.nnkwrik.kirinrpc.netty.cli;
 
-import io.github.nnkwrik.kirinrpc.netty.handler.*;
+import io.github.nnkwrik.kirinrpc.ConnectFailedException;
+import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
+import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
+import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectionWatchdog;
+import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectorHandler;
+import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectorIdealStateTrigger;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -26,30 +32,50 @@ public class KirinClientConnector extends NettyConnector {
 
 
     @Override
-    public Channel connect(String host,int port) {
+    public Channel connect(String host, int port) {
+
+        ChannelHandler[] handlers = {
+                //每隔30s的时间触发一次userEventTriggered的方法，并且指定IdleState的状态位是WRITER_IDLE
+                new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS),
+                //实现userEventTriggered方法，并在state是WRITER_IDLE的时候发送一个心跳包到sever端，告诉server端我还活着
+                idealStateTrigger,
+                new ProtocolDecoder(),
+                encoder,
+                handler
+        };
+
+        final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, null, port, host, handlers);
+        watchdog.setReconnect(true);
+
         bootstrap.channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(
-                                //每隔30s的时间触发一次userEventTriggered的方法，并且指定IdleState的状态位是WRITER_IDLE
-                                new IdleStateHandler(0, 10, 0, TimeUnit.SECONDS),
-                                //实现userEventTriggered方法，并在state是WRITER_IDLE的时候发送一个心跳包到sever端，告诉server端我还活着
-                                idealStateTrigger,
-                                new ProtocolDecoder(),
-                                encoder,
-                                handler
-                        );
+                        ch.pipeline().addLast(handlers);
                     }
                 });
 
-        ChannelFuture future = null;
+
+        Channel channel = null;
         try {
-            future = bootstrap.connect(host, port).sync();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            ChannelFuture future;
+            synchronized (bootstrap) {
+                bootstrap.handler(new ChannelInitializer<NioSocketChannel>() {
+
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(handlers);
+                    }
+                });
+
+                future = bootstrap.connect(host, port);
+            }
+            future.sync();
+            channel = future.channel();
+        } catch (Throwable t) {
+            throw new ConnectFailedException("connects to [" + host + ":" + port + "] fails", t);
         }
 
-        return future.channel();
+        return channel;
     }
 }

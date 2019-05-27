@@ -59,7 +59,7 @@ public abstract class NettyConnector {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOW_HALF_CLOSURE, false);
-        log.info("netty client connector completed initialization.");
+        log.info("netty client cli completed initialization.");
     }
 
 
