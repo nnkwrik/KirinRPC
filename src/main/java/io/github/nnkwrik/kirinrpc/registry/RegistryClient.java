@@ -1,5 +1,6 @@
 package io.github.nnkwrik.kirinrpc.registry;
 
+import io.github.nnkwrik.kirinrpc.registry.listener.NotifyListener;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 

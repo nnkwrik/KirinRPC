@@ -1,11 +1,8 @@
 package io.github.nnkwrik.kirinrpc.netty.handler.cli;
 
-import io.github.nnkwrik.kirinrpc.common.Constants;
-import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
-import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
-import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,12 +19,11 @@ public class ConnectorHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
-
-        ResponsePayload responsePayload = (ResponsePayload) msg;
-        KirinResponse response = SerializerHolder.serializerImpl().readObject(responsePayload.bytes(), KirinResponse.class);
-
-        System.out.println("==== " + response);
-        ctx.channel().close();
+        if (msg instanceof ResponsePayload) {
+            ResponsePayload responsePayload = (ResponsePayload) msg;
+            //TODO 在task里进行反序列化
+            KirinResponse response = SerializerHolder.serializerImpl().readObject(responsePayload.bytes(), KirinResponse.class);
+            ConnectorManager.getInstance().receiveResponse(responsePayload.id(), response);
+        }
     }
 }

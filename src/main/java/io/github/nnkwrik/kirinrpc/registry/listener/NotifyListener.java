@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc.registry;
+package io.github.nnkwrik.kirinrpc.registry.listener;
 
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 

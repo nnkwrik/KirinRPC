@@ -14,10 +14,8 @@ public class ConsumerService {
     @KirinConsumeService
     HelloWorldService helloWorldService;
 
-    @KirinConsumeService
-    HelloWorldService2 helloWorldService2;
-
     public void invokeRemoteService() {
-        helloWorldService.sayHello("tom");
+        String response = helloWorldService.sayHello("tom");
+        System.out.println(response);
     }
 }

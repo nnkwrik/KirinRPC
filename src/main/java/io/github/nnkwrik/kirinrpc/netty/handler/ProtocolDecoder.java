@@ -70,6 +70,8 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
                         responseHolder.status(header.status());
                         responseHolder.bytes(bytes);
                         out.add(responseHolder);
+
+                        break;
                     }
 
                     default:

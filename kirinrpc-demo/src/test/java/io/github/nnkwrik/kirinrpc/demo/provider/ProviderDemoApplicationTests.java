@@ -1,6 +1,5 @@
-package io.github.nnkwrik.kirinrpc.demo;
+package io.github.nnkwrik.kirinrpc.demo.provider;
 
-import io.github.nnkwrik.kirinrpc.demo.provider.ProviderDemoApplication;
 import io.github.nnkwrik.kirinrpc.springboot.config.provider.ProviderConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;

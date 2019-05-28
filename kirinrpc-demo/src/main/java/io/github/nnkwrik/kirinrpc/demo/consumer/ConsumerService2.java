@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
  * @author nnkwrik
  * @date 19/05/22 14:54
  */
-@Component
+//@Component
 public class ConsumerService2 {
-    @KirinConsumeService
+//    @KirinConsumeService
     HelloWorldService helloWorldService;//从缓存中取通过ConsumerService1构造的
 
     public void invokeRemoteService() {

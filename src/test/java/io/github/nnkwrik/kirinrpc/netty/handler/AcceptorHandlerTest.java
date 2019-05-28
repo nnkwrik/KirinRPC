@@ -16,7 +16,7 @@ public class AcceptorHandlerTest {
         KirinClientConnector kirinClientConnector = new KirinClientConnector();
 
         KirinRequest request = new KirinRequest();
-        request.setAppName("appName");
+
         request.setServiceMeta(new ServiceMeta("io.github.nnkwrik.kirinrpc.demo.api.HelloWorldService", Constants.ANY_GROUP));
         request.setMethodName("sayHello");
         request.setArgTypes(new Class[]{String.class});
@@ -37,7 +37,7 @@ public class AcceptorHandlerTest {
         KirinClientConnector kirinClientConnector = new KirinClientConnector();
 
         KirinRequest request = new KirinRequest();
-        request.setAppName("appName");
+
         request.setServiceMeta(new ServiceMeta("not.exist.service", Constants.ANY_GROUP));
         request.setMethodName("sayHello");
         request.setArgTypes(new Class[]{String.class});

@@ -2,6 +2,7 @@ package io.github.nnkwrik.kirinrpc.registry;
 
 import io.github.nnkwrik.kirinrpc.common.util.JsonUtil;
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
+import io.github.nnkwrik.kirinrpc.registry.listener.NotifyListener;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import lombok.extern.slf4j.Slf4j;
