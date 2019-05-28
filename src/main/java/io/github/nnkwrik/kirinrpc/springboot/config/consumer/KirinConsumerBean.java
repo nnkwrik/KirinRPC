@@ -43,8 +43,10 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
         ServiceNotifyListener listener = new ServiceNotifyListener(serviceMeta);
         registryClient.subscribe(serviceMeta, listener);
 
-        if (!listener.waitForAvailable(TimeUnit.SECONDS.toMillis(1))) {
-            throw new ConnectFailedException();
+        if (!listener.waitForAvailable(TimeUnit.SECONDS.toMillis(10))) {
+            String msg = "Can't find provider for service " + consumerInterface.getName() + " in registry";
+            log.error(msg);
+            throw new ConnectFailedException(msg);
         }
         //创建proxy对象返回。调用proxy时实际是用这里的netty连接
         System.out.println(consumerInterface.getName() + " --- " + consumeServiceAnnotation);
@@ -53,7 +55,7 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
 
     @Override
     public Class<?> getObjectType() {
-        return null;
+        return consumerInterface;
     }
 
 

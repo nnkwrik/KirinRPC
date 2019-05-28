@@ -1,8 +1,8 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer;
 
 import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
+import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
-import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.netty.channel.Channel;
 
@@ -47,8 +47,12 @@ public class SyncInvoker<T> implements InvocationHandler {
 
         Channel connection = connectorManager.chooseConnection(serviceMeta);
         RPCFuture future = connectorManager.sendRequest(connection, request);
-        KirinResponse response = future.get();
+        Object result = future.get().getResult();
 
-        return response.getResult();
+        if (result instanceof KirinRemoteException) {
+            throw (KirinRemoteException) result;
+        }
+
+        return result;
     }
 }

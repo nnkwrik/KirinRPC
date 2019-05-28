@@ -6,6 +6,7 @@ import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectionWatchdog;
 import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectorHandler;
 import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectorIdealStateTrigger;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.ResponseProcessor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
@@ -27,9 +28,15 @@ public class KirinClientConnector extends NettyConnector {
     //编码器
     private final ProtocolEncoder encoder = new ProtocolEncoder();
 
-    //进行rpc调用的handler
-    private final ConnectorHandler handler = new ConnectorHandler();
+    //处理rpc调用结果的handler
+    private final ConnectorHandler handler;
+    //处理rpc调用结果的处理器
+    private final ResponseProcessor processor;
 
+    public KirinClientConnector(ResponseProcessor processor) {
+        this.processor = processor;
+        this.handler = new ConnectorHandler(processor);
+    }
 
     @Override
     public Channel connect(String host, int port) {
@@ -77,5 +84,11 @@ public class KirinClientConnector extends NettyConnector {
         }
 
         return channel;
+    }
+
+    @Override
+    public void shutdown() {
+        worker.shutdownGracefully().syncUninterruptibly();
+        processor.shutdown();
     }
 }

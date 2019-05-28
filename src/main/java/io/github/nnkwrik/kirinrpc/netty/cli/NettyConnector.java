@@ -22,7 +22,7 @@ public abstract class NettyConnector {
 
     protected Bootstrap bootstrap;
     private int nWorkers;
-    private EventLoopGroup worker;
+    protected EventLoopGroup worker;
     protected volatile ByteBufAllocator allocator;
 
 
@@ -51,5 +51,7 @@ public abstract class NettyConnector {
     }
 
     public abstract Channel connect(String host, int port);
+
+    public abstract void shutdown();
 
 }

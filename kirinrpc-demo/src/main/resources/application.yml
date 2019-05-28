@@ -9,7 +9,10 @@
 #    name: consumerName
 #    registry-address: 127.0.0.1:2181
 
+
 logging:
   level:
     io.github.nnkwrik.kirinrpc: debug
     org.springframework.beans.factory: debug
+server:
+  port: 8080

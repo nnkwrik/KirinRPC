@@ -2,6 +2,7 @@ package io.github.nnkwrik.kirinrpc.netty.cli;
 
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.ConsumerProcessor;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.RPCFuture;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
@@ -31,7 +32,7 @@ public class ConnectorManager {
     //服务和提供该服务提供者channel.
     private final ConcurrentMap<ServiceMeta, Set<Channel>> serviceChannels = new ConcurrentHashMap<>();
     //已发送但还未收到响应的request
-    private final ConcurrentMap<Long, RPCFuture> sendedRequest = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Long, RPCFuture> sentRequest = new ConcurrentHashMap<>();
 
     //id
     private final AtomicLong aLong = new AtomicLong(0);//TODO atomicLong?
@@ -42,17 +43,12 @@ public class ConnectorManager {
             synchronized (ConnectorManager.class) {
                 if (connectorManager == null) {
                     connectorManager = new ConnectorManager();
-                    connectorManager.connector = new KirinClientConnector();
+                    connectorManager.connector = new KirinClientConnector(new ConsumerProcessor());
                 }
             }
         }
         return connectorManager;
     }
-
-    public NettyConnector getConnector() {
-        return connector;
-    }
-
 
     public Channel createConnectionWithAddress(RegisterMeta.Address address) {
         Channel channel = addressChannelMap.get(address);
@@ -121,7 +117,7 @@ public class ConnectorManager {
             return null;
         }
 
-        RPCFuture existFuture = sendedRequest.putIfAbsent(id, future);
+        RPCFuture existFuture = sentRequest.putIfAbsent(id, future);
         if (existFuture != null) {
             future = existFuture;
         }
@@ -130,11 +126,10 @@ public class ConnectorManager {
     }
 
     public void receiveResponse(long id, KirinResponse response) {
-        RPCFuture future = sendedRequest.get(id);
-        if (future == null) {
-            //thows some
+        RPCFuture future = sentRequest.remove(id);
+        if (future != null) {
+            future.done(response);
         }
-        future.done(response);
     }
 
 }

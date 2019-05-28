@@ -171,7 +171,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                 return;
             }
 
-            log.info("Child event: {}", event);
+            log.info("Child event: {}.path={}", event.getType(), event.getData().getPath());
 
             switch (event.getType()) {
                 case CHILD_ADDED: {
