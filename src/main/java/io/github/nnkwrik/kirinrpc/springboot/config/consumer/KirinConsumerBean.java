@@ -44,9 +44,8 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
         registryClient.subscribe(serviceMeta, listener);
 
         if (!listener.waitForAvailable(TimeUnit.SECONDS.toMillis(10))) {
-            String msg = "Can't find provider for service " + consumerInterface.getName() + " in registry";
-            log.error(msg);
-            throw new ConnectFailedException(msg);
+            String msg = "Can't find provider for service " + consumerInterface.getName() + " in registry when client boot";
+            log.warn(msg);
         }
         //创建proxy对象返回。调用proxy时实际是用这里的netty连接
         System.out.println(consumerInterface.getName() + " --- " + consumeServiceAnnotation);

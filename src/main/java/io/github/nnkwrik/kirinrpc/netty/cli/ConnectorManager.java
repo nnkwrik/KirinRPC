@@ -1,5 +1,6 @@
 package io.github.nnkwrik.kirinrpc.netty.cli;
 
+import io.github.nnkwrik.kirinrpc.ConnectFailedException;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.ConsumerProcessor;
@@ -92,6 +93,9 @@ public class ConnectorManager {
     }
 
     public Channel chooseConnection(ServiceMeta serviceMeta) {
+        if (getProviderConnections(serviceMeta).size() <= 0) {
+            throw new ConnectFailedException("No provider can provide this service " + serviceMeta);
+        }
         return (Channel) getProviderConnections(serviceMeta).toArray()[0];
     }
 
