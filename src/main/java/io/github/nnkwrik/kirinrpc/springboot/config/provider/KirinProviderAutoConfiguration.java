@@ -55,14 +55,20 @@ public class KirinProviderAutoConfiguration {
         ProviderConfig config = new ProviderConfig();
         BeanUtils.copyProperties(providerPropertiesConfig, config);
 
-        String name = config.getName();
-        if (StringUtils.isEmpty(name)) {
-            name = providerAnnotationConfig.name();
-            if (StringUtils.isEmpty(name)) {
-                //生成随机的name
-                name = "provider-" + UUID.randomUUID();
-            }
+        String name = System.getProperty("kirin.provider.name");
+        if (!StringUtils.isEmpty(name)){
             config.setName(name);
+        }else {
+            name = config.getName();
+            if (StringUtils.isEmpty(name)) {
+                name = providerAnnotationConfig.name();
+                if (StringUtils.isEmpty(name)) {
+                    //生成随机的name
+                    name = "provider-" + UUID.randomUUID();
+                }
+                config.setName(name);
+            }
+            System.setProperty("kirin.provider.name",name);
         }
 
         String registryAddress = config.getRegistryAddress();

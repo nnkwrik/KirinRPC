@@ -165,16 +165,16 @@ public class ZookeeperRegistryClient implements RegistryClient {
 
         newPathChildren.getListenable().addListener((client, event) -> {
 
-            RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
-            if (registerMeta == null) {
-                //json解析失败
-                return;
-            }
 
-            log.info("Child event: {}.path={}", event.getType(), event.getData().getPath());
+            log.info("Child event: {}.", event);
 
             switch (event.getType()) {
                 case CHILD_ADDED: {
+                    RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
+                    if (registerMeta == null) {
+                        //json解析失败
+                        return;
+                    }
                     //获取新添加的服务信息
                     ServiceMeta serviceMeta = registerMeta.getServiceMeta();
 
@@ -192,6 +192,18 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     break;
                 }
                 case CHILD_REMOVED: {
+                    RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
+                    if (registerMeta == null) {
+                        //json解析失败
+                        return;
+                    }
+                    //还包含，说明没有移除
+//                    List<String> children = client.getChildren().forPath(directory);
+//                    String eventChildren = event.getData().getPath().split("/")[4];
+//                    if (children.contains(eventChildren)){
+//                        return;
+//                    }
+
                     //获取要移除的服务信息
                     ServiceMeta serviceMeta = registerMeta.getServiceMeta();
 

@@ -55,14 +55,20 @@ public class KirinConsumerAutoConfiguration {
         ConsumerConfig config = new ConsumerConfig();
         BeanUtils.copyProperties(consumerPropertiesConfig, config);
 
-        String name = config.getName();
-        if (StringUtils.isEmpty(name)) {
-            name = consumerAnnotationConfig.name();
-            if (StringUtils.isEmpty(name)) {
-                //生成随机的name
-                name = "consumer-" + UUID.randomUUID();
-            }
+        String name = System.getProperty("kirin.consumer.name");
+        if (!StringUtils.isEmpty(name)) {
             config.setName(name);
+        } else {
+            name = config.getName();
+            if (StringUtils.isEmpty(name)) {
+                name = consumerAnnotationConfig.name();
+                if (StringUtils.isEmpty(name)) {
+                    //生成随机的name
+                    name = "consumer-" + UUID.randomUUID();
+                }
+                config.setName(name);
+            }
+            System.setProperty("kirin.consumer.name", name);
         }
 
         String registryAddress = config.getRegistryAddress();

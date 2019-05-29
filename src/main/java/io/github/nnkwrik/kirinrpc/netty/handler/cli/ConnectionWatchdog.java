@@ -1,11 +1,15 @@
 package io.github.nnkwrik.kirinrpc.netty.handler.cli;
 
+import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.util.Timeout;
 import io.netty.util.Timer;
 import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -15,7 +19,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  */
 @Slf4j
 @ChannelHandler.Sharable
-public class ConnectionWatchdog extends ChannelInboundHandlerAdapter implements TimerTask {
+public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter implements TimerTask {
+
+    private static Map<Channel, ConnectionWatchdog> watchdogMap = new HashMap<>();
 
     private final Bootstrap bootstrap;
     private final Timer timer;
@@ -25,18 +31,24 @@ public class ConnectionWatchdog extends ChannelInboundHandlerAdapter implements 
     private volatile boolean reconnect = true;
     private int attempts;
 
-    private ChannelHandler[] handlers;
+    private Channel connection;
 
-    public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, int port, String host, ChannelHandler[] handlers) {
+    public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, int port, String host) {
         this.bootstrap = bootstrap;
         this.timer = timer;
         this.port = port;
         this.host = host;
-        this.handlers = handlers;
     }
 
     public boolean isReconnect() {
         return reconnect;
+    }
+
+    public static void setReconnect(Channel connection, boolean reconnect) {
+        ConnectionWatchdog watchdog = watchdogMap.get(connection);
+        if (watchdog != null) {
+            watchdog.setReconnect(reconnect);
+        }
     }
 
     public void setReconnect(boolean reconnect) {
@@ -46,10 +58,11 @@ public class ConnectionWatchdog extends ChannelInboundHandlerAdapter implements 
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
+        connection = ctx.channel();
+        watchdogMap.put(connection, this);
         attempts = 0;
 
-        log.info("Connects with {}.", channel);
+        log.info("Connects with {}.", connection);
 
         ctx.fireChannelActive();
     }
@@ -82,7 +95,7 @@ public class ConnectionWatchdog extends ChannelInboundHandlerAdapter implements 
 
                 @Override
                 protected void initChannel(Channel ch) throws Exception {
-                    ch.pipeline().addLast(handlers);
+                    ch.pipeline().addLast(handlers());
                 }
             });
             future = bootstrap.connect(host, port);
@@ -98,8 +111,19 @@ public class ConnectionWatchdog extends ChannelInboundHandlerAdapter implements 
                 if (!succeed) {
                     //如果失败了再次进入调用channelInactive()进行重连
                     f.channel().pipeline().fireChannelInactive();
+                } else {
+                    Channel newConnection = future.channel();
+                    ConnectionWatchdog watchdog = watchdogMap.remove(connection);
+                    watchdogMap.put(newConnection, watchdog);
+                    ConnectorManager.getInstance()
+                            .replaceInactiveConnection(connection, newConnection);
+                    connection = newConnection;
+
                 }
             }
         });
     }
+
+
+    public abstract ChannelHandler[] handlers();
 }

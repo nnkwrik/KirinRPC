@@ -8,6 +8,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.DefaultMessageSizeEstimator;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.internal.PlatformDependent;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +47,8 @@ public abstract class NettyConnector {
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) SECONDS.toMillis(3))
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.ALLOW_HALF_CLOSURE, false);
+                .option(ChannelOption.ALLOW_HALF_CLOSURE, false)
+                .channel(NioSocketChannel.class);
         log.info("netty client cli completed initialization.");
     }
 

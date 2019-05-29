@@ -8,6 +8,7 @@ import io.netty.channel.Channel;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.AbstractMap;
 
 /**
  * @author nnkwrik
@@ -39,13 +40,17 @@ public class SyncInvoker<T> implements InvocationHandler {
                 throw new IllegalStateException(String.valueOf(method));
             }
         }
+        AbstractMap.SimpleEntry<String, Channel> entry = connectorManager.chooseConnection(serviceMeta);
+        String providerName = entry.getKey();
+        Channel connection = entry.getValue();
+
         KirinRequest request = new KirinRequest();
+        request.setProviderName(providerName);
         request.setServiceMeta(serviceMeta);
         request.setMethodName(method.getName());
         request.setArgTypes(method.getParameterTypes());
         request.setArgs(args);
 
-        Channel connection = connectorManager.chooseConnection(serviceMeta);
         RPCFuture future = connectorManager.sendRequest(connection, request);
         Object result = future.get().getResult();
 

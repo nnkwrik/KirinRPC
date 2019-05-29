@@ -38,9 +38,11 @@ public class ServiceNotifyListener implements NotifyListener {
             log.info("service {} has a new provider.provider address is {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
             //拿到与该提供者的channel，如果没有与这个提供者的channel则创建
-            Channel connection = connectorManager.createConnectionWithAddress(registerMeta.getAddress());
-            Set<Channel> providerChannels = connectorManager.getProviderConnections(registerMeta.getServiceMeta());
-            providerChannels.add(connection);
+            Channel connection = connectorManager.createConnectionWithProvider(
+                    registerMeta.getAppName(),
+                    registerMeta.getAddress());
+            Set<Channel> serviceConnections = connectorManager.getServiceConnections(registerMeta.getServiceMeta());
+            serviceConnections.add(connection);
 
             lock.lock();
             try {
@@ -52,11 +54,15 @@ public class ServiceNotifyListener implements NotifyListener {
         } else if (event == NotifyListener.NotifyEvent.CHILD_REMOVED) {
             log.info("service {} reduced a provider.provider address was {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
-            Channel connection = connectorManager.closeConnectionWithAddress(registerMeta.getAddress());
-            Set<Channel> providerChannels = connectorManager.getProviderConnections(registerMeta.getServiceMeta());
-            providerChannels.remove(connection);
+            Channel closed = connectorManager.closeConnectionWithProvider(
+                    registerMeta.getAppName(),
+                    registerMeta.getAddress());
+            Set<Channel> serviceConnections = connectorManager.getServiceConnections(registerMeta.getServiceMeta());
+            if (closed != null) {
+                serviceConnections.remove(closed);
+            }
 
-            if (providerChannels.size() <= 0) {
+            if (serviceConnections.isEmpty()) {
                 //TODO 没有服务提供者了
             }
 
@@ -70,6 +76,7 @@ public class ServiceNotifyListener implements NotifyListener {
 
         boolean available = false;
         long remains = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+        log.debug("Waiting available provider for {},max {} ms.", serviceMeta, timeoutMillis);
         lock.lock();
         try {
             // avoid "spurious wakeup" occurs

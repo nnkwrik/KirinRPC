@@ -51,6 +51,16 @@ public class RPCTask implements Runnable {
                 return;
             }
 
+            //自己是否为目标的provider
+            if (!System.getProperty("kirin.provider.name").equals(request.getProviderName())) {
+                String msg = String.format("Consumer excepted provider name is %s,but this provider name is %s.Refuse RPC request.",
+                        request.getProviderName(),
+                        System.getProperty("kirin.provider.name"));
+                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, Status.APP_FLOW_CONTROL));
+                return;
+            }
+
+
             //查找服务
             final ServiceWrapper serviceProvider = providerLookup.lookupService(request.getServiceMeta());
             if (serviceProvider == null) {

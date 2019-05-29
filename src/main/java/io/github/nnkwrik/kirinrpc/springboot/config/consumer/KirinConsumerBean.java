@@ -1,6 +1,5 @@
 package io.github.nnkwrik.kirinrpc.springboot.config.consumer;
 
-import io.github.nnkwrik.kirinrpc.ConnectFailedException;
 import io.github.nnkwrik.kirinrpc.registry.RegistryClient;
 import io.github.nnkwrik.kirinrpc.registry.RegistryFactory;
 import io.github.nnkwrik.kirinrpc.registry.listener.ServiceNotifyListener;
@@ -43,8 +42,8 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
         ServiceNotifyListener listener = new ServiceNotifyListener(serviceMeta);
         registryClient.subscribe(serviceMeta, listener);
 
-        if (!listener.waitForAvailable(TimeUnit.SECONDS.toMillis(10))) {
-            String msg = "Can't find provider for service " + consumerInterface.getName() + " in registry when client boot";
+        if (!listener.waitForAvailable(TimeUnit.SECONDS.toMillis(3))) {
+            String msg = "Can't find provider for service " + consumerInterface.getName() + " when client boot";
             log.warn(msg);
         }
         //创建proxy对象返回。调用proxy时实际是用这里的netty连接

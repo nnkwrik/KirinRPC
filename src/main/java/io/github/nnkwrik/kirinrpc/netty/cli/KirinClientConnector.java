@@ -13,9 +13,12 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.HashedWheelTimer;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author nnkwrik
@@ -33,6 +36,16 @@ public class KirinClientConnector extends NettyConnector {
     //处理rpc调用结果的处理器
     private final ResponseProcessor processor;
 
+    //连接断开时进行重连的timer
+    protected final HashedWheelTimer timer = new HashedWheelTimer(new ThreadFactory() {
+
+        private AtomicInteger threadIndex = new AtomicInteger(0);
+
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "NettyClientConnectorExecutor_" + this.threadIndex.incrementAndGet());
+        }
+    });
+
     public KirinClientConnector(ResponseProcessor processor) {
         this.processor = processor;
         this.handler = new ConnectorHandler(processor);
@@ -41,27 +54,23 @@ public class KirinClientConnector extends NettyConnector {
     @Override
     public Channel connect(String host, int port) {
 
-        ChannelHandler[] handlers = {
-                //每隔30s的时间触发一次userEventTriggered的方法，并且指定IdleState的状态位是WRITER_IDLE
-                new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS),
-                //实现userEventTriggered方法，并在state是WRITER_IDLE的时候发送一个心跳包到sever端，告诉server端我还活着
-                idealStateTrigger,
-                new ProtocolDecoder(),
-                encoder,
-                handler
+        final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, timer, port, host) {
+
+            @Override
+            public ChannelHandler[] handlers() {
+                return new ChannelHandler[]{
+                        this,
+                        //每隔30s的时间触发一次userEventTriggered的方法，并且指定IdleState的状态位是WRITER_IDLE
+                        new IdleStateHandler(0, 30, 0, TimeUnit.SECONDS),
+                        //实现userEventTriggered方法，并在state是WRITER_IDLE的时候发送一个心跳包到sever端，告诉server端我还活着
+                        idealStateTrigger,
+                        new ProtocolDecoder(),
+                        encoder,
+                        handler
+                };
+            }
         };
-
-        final ConnectionWatchdog watchdog = new ConnectionWatchdog(bootstrap, null, port, host, handlers);
         watchdog.setReconnect(true);
-
-        bootstrap.channel(NioSocketChannel.class)
-                .handler(new ChannelInitializer<NioSocketChannel>() {
-                    @Override
-                    protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(handlers);
-                    }
-                });
-
 
         Channel channel = null;
         try {
@@ -71,7 +80,7 @@ public class KirinClientConnector extends NettyConnector {
 
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(handlers);
+                        ch.pipeline().addLast(watchdog.handlers());
                     }
                 });
 
