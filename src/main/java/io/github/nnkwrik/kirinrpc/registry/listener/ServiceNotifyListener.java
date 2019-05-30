@@ -3,10 +3,8 @@ package io.github.nnkwrik.kirinrpc.registry.listener;
 import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
-import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,11 +36,9 @@ public class ServiceNotifyListener implements NotifyListener {
             log.info("service {} has a new provider.provider address is {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
             //拿到与该提供者的channel，如果没有与这个提供者的channel则创建
-            Channel connection = connectorManager.createConnectionWithProvider(
-                    registerMeta.getAppName(),
-                    registerMeta.getAddress());
-            Set<Channel> serviceConnections = connectorManager.getServiceConnections(registerMeta.getServiceMeta());
-            serviceConnections.add(connection);
+            connectorManager.addConnectionWithProvider(registerMeta.getAppName(),
+                    registerMeta.getAddress(),
+                    registerMeta.getServiceMeta());
 
             lock.lock();
             try {
@@ -54,17 +50,13 @@ public class ServiceNotifyListener implements NotifyListener {
         } else if (event == NotifyListener.NotifyEvent.CHILD_REMOVED) {
             log.info("service {} reduced a provider.provider address was {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
-            Channel closed = connectorManager.closeConnectionWithProvider(
-                    registerMeta.getAppName(),
-                    registerMeta.getAddress());
-            Set<Channel> serviceConnections = connectorManager.getServiceConnections(registerMeta.getServiceMeta());
-            if (closed != null) {
-                serviceConnections.remove(closed);
-            }
+            connectorManager.removeConnectionWithProvider(registerMeta.getAppName(),
+                    registerMeta.getAddress(),
+                    registerMeta.getServiceMeta());
 
-            if (serviceConnections.isEmpty()) {
-                //TODO 没有服务提供者了
-            }
+//            if (serviceConnections.isEmpty()) {
+//                //TODO 没有服务提供者了
+//            }
 
         }
     }

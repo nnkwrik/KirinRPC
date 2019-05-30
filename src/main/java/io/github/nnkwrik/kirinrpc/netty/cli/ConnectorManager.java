@@ -13,9 +13,11 @@ import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.util.AttributeKey;
 
 import java.util.AbstractMap;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -32,7 +34,7 @@ public class ConnectorManager {
 
     //address对应的channel连接
     private final ConcurrentMap<RegisterMeta.Address, Channel> addressChannel = new ConcurrentHashMap<>();
-    //共用一个channel的provider集合，address相同的provider会共用一个channel
+    //共用一个channel的provider集合，address相同的provider会共用一个channel.value为provider的appName
     private final ConcurrentMap<Channel, Set<String>> channelProviders = new ConcurrentHashMap<>();
     //服务和提供该服务提供者channel.
     private final ConcurrentMap<ServiceMeta, Set<Channel>> serviceChannels = new ConcurrentHashMap<>();
@@ -55,29 +57,26 @@ public class ConnectorManager {
         return connectorManager;
     }
 
-    /**
-     * TODO
-     * #createConnectionWithProvider(),#closeConnectionWithProvider()与#replaceInactiveConnection之间可能存在线程问题
-     * 暂时全部加上synchronize，但绝对不是好的方案。颗粒度太大了
-     *
-     * @param name
-     * @param address
-     * @return
-     */
-    public synchronized Channel createConnectionWithProvider(String name, RegisterMeta.Address address) {
-        Channel channel = addressChannel.get(address);
 
-        if (channel == null) {
+    public void addConnectionWithProvider(String providerName, RegisterMeta.Address address, ServiceMeta service) {
+
+        Channel channel;
+
+        if (addressChannel.get(address) != null) {
+            //一个简单的CAS操作，防止对于一个add,remove,replace3个操作同时执行
+            channel = ChannelLock.lock(addressChannel, address);
+        } else {
             Channel newChannel = connector.connect(address.getHost(), address.getPort());
             channel = addressChannel.putIfAbsent(address, newChannel);
             if (channel == null) {
                 channel = newChannel;
             } else {
-                channel.close();
+                newChannel.close();
             }
+            ChannelLock.lock(channel);
         }
-        //比如这里就可能会有线程问题。如果这个是旧channel，可能channelProviders已经被replace改为新的channel了。再去get就会拿到的必然是空。
-        channel = addressChannel.get(address);
+
+
         Set<String> providers = channelProviders.get(channel);
         if (providers == null) {
             Set<String> newProviders = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -86,55 +85,115 @@ public class ConnectorManager {
                 providers = newProviders;
             }
         }
-        providers.add(name);
+        providers.add(providerName);
 
-        return channel;
-    }
-
-    public synchronized Channel closeConnectionWithProvider(String name, RegisterMeta.Address address) {
-        Channel channel = addressChannel.get(address);
-        Channel removed = null;
-        if (channel != null) {
-            Set<String> providers = channelProviders.get(channel);
-            if (providers != null) {
-                providers.remove(name);
-                if (providers.isEmpty()) {
-                    channelProviders.remove(channel);
-                    removed = addressChannel.remove(address);
-                    if (removed != null) {
-                        removed.close();
-                        ConnectionWatchdog.setReconnect(removed, false);
-                    }
-                }
-            }
-        }
-        return removed;
-    }
-
-    public Set<Channel> getServiceConnections(ServiceMeta serviceMeta) {
-        Set<Channel> channels = serviceChannels.get(serviceMeta);
+        Set<Channel> channels = serviceChannels.get(service);
         if (channels == null) {
             Set<Channel> newChannels = Collections.newSetFromMap(new ConcurrentHashMap<>());
-            channels = serviceChannels.putIfAbsent(serviceMeta, newChannels);
+            channels = serviceChannels.putIfAbsent(service, newChannels);
             if (channels == null) {
                 channels = newChannels;
             }
         }
-        return channels;
+        channels.add(channel);
+
+        ChannelLock.unlock(channel);
     }
 
-    public boolean isAvailable(ServiceMeta meta) {
-        if (!getServiceConnections(meta).isEmpty()) {
+
+    public Channel removeConnectionWithProvider(String providerName, RegisterMeta.Address address, ServiceMeta service) {
+        Channel channel;
+        Channel closedChannel = null;
+
+        if (addressChannel.get(address) != null) {
+            channel = ChannelLock.lock(addressChannel, address);
+            Set<String> providers = channelProviders.get(channel);
+            if (providers != null) {
+                providers.remove(providerName);
+                if (providers.isEmpty()) {
+                    //说明该channel上没有任何provider
+                    addressChannel.remove(address);
+                    channelProviders.remove(channel);
+
+                    Set<Channel> channels = serviceChannels.get(service);
+                    if (channels != null) {
+                        channels.remove(channel);
+                        if (channels.isEmpty()) {
+                            serviceChannels.remove(service);
+                        }
+                    }
+
+                    //关闭这个不提供服务的channel
+                    channel.close();
+                    ConnectionWatchdog.setReconnect(channel, false);
+                    closedChannel = channel;
+                }
+            }
+
+            ChannelLock.unlock(channel);
+        }
+
+        return closedChannel;
+    }
+
+    public void replaceInactiveConnection(Channel inactive, Channel active) {
+        ChannelLock.lock(inactive);
+        ChannelLock.lock(active);
+
+        //对addressChannel，serviceChannels，channelProviders中的channel对象进行替换
+        Set<String> remove = channelProviders.remove(inactive);
+        if (remove != null && !remove.isEmpty()) {
+            Set<String> providers = channelProviders.get(active);
+            if (providers == null) {
+                Set<String> newProviders = Collections.newSetFromMap(new ConcurrentHashMap<>());
+                providers = channelProviders.putIfAbsent(active, newProviders);
+                if (providers == null) {
+                    providers = newProviders;
+                }
+            }
+            providers.addAll(remove);
+        }
+
+
+        for (Set<Channel> channels : serviceChannels.values()) {
+            if (channels.contains(inactive)) {
+                synchronized (inactive) {
+                    channels.remove(inactive);
+                    channels.add(active);
+                }
+            }
+        }
+        for (RegisterMeta.Address address : addressChannel.keySet()) {
+            if (addressChannel.replace(address, inactive, active)) {
+                break;
+            }
+        }
+
+        ChannelLock.unlock(inactive);
+        ChannelLock.unlock(active);
+    }
+
+    public boolean isAvailable(ServiceMeta service) {
+        Set<Channel> channels = serviceChannels.get(service);
+        if (channels != null && !channels.isEmpty()) {
             return true;
         }
         return false;
     }
 
+    private Set<Channel> getConnections(ServiceMeta service) {
+        Set<Channel> channels = serviceChannels.get(service);
+        if (channels != null && !channels.isEmpty()) {
+            return channels;
+        }
+        return null;
+    }
+
     public AbstractMap.SimpleEntry<String, Channel> chooseConnection(ServiceMeta serviceMeta) {
-        if (getServiceConnections(serviceMeta).size() <= 0) {
+        if (!isAvailable(serviceMeta)) {
             throw new ConnectFailedException("No provider can provide this service " + serviceMeta);
         }
-        Channel channel = (Channel) getServiceConnections(serviceMeta).toArray()[0];
+        Channel channel = (Channel) getConnections(serviceMeta).toArray()[0];
         Set<String> providers = channelProviders.get(channel);
         //TODO throw exception
         String appName = (String) providers.toArray()[0];
@@ -179,46 +238,51 @@ public class ConnectorManager {
         }
     }
 
-    public synchronized void replaceInactiveConnection(Channel inactive, Channel active) {
-        //对addressChannel，serviceChannels，channelProviders中的channel对象进行替换
 
-        for (RegisterMeta.Address address : addressChannel.keySet()) {
-            addressChannel.replace(address, inactive, active);
-        }
+    static class ChannelLock {
 
+        private static final AttributeKey<Object> lock = AttributeKey.newInstance("lock");
 
-        Set<String> remove = channelProviders.remove(inactive);
-        if (remove != null && !remove.isEmpty()) {
-            Set<String> providers = channelProviders.get(active);
-            if (providers == null) {
-                Set<String> newProviders = Collections.newSetFromMap(new ConcurrentHashMap<>());
-                providers = channelProviders.putIfAbsent(active, newProviders);
-                if (providers == null) {
-                    providers = newProviders;
+        public static Channel lock(Map<RegisterMeta.Address, Channel> addressChannel,
+                                   RegisterMeta.Address address) {
+            Channel channel;
+            Object newLock = new Object();
+            while ((channel = addressChannel.get(address)) != null
+                    && !channel.attr(lock).compareAndSet(null, newLock)) {//占用失败之间
+                Object currentLock = channel.attr(lock).get();
+                synchronized (currentLock) {
+                    try {
+                        currentLock.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-            providers.addAll(remove);
+            return channel;
         }
 
-        for (Set<Channel> channels : serviceChannels.values()) {
-            if (channels.remove(inactive)) {
-                channels.add(active);
+        public static Channel lock(Channel channel) {
+            Object newLock = new Object();
+            while (!channel.attr(lock).compareAndSet(null, newLock)) {
+                Object currentLock = channel.attr(lock).get();
+                synchronized (currentLock) {
+                    try {
+                        currentLock.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return channel;
+        }
+
+        public static void unlock(Channel channel) {
+            Object currentLock = channel.attr(lock).getAndSet(null);
+            synchronized (currentLock) {
+                currentLock.notifyAll();
             }
         }
-
     }
 
-    public synchronized void removeInactiveConnection(Channel inactive) {
-        for (RegisterMeta.Address address : addressChannel.keySet()) {
-            addressChannel.remove(address, inactive);
-        }
-
-        channelProviders.remove(inactive);
-
-        for (Set<Channel> channels : serviceChannels.values()) {
-            channels.remove(inactive);
-        }
-
-    }
 
 }
