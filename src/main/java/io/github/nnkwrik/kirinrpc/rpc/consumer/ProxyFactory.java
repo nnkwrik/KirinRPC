@@ -3,6 +3,8 @@ package io.github.nnkwrik.kirinrpc.rpc.consumer;
 import io.github.nnkwrik.kirinrpc.common.Constants;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.AsyncInvoker;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.SyncInvoker;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.LoadBalancer;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.SimpleLoadBalancer;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -19,11 +21,11 @@ public class ProxyFactory<I> {
 
     private InvokerType invokerType = InvokerType.SYNC;
 
-    private Dispatcher dispatcher;
+    private LoadBalancer loadBalancer;
 
     private ProxyFactory(Class<I> interfaceClass) {
         this.interfaceClass = interfaceClass;
-        this.dispatcher = new Dispatcher();
+        this.loadBalancer = new SimpleLoadBalancer();
     }
 
     public static <I> ProxyFactory<I> factory(Class<I> interfaceClass) {
@@ -44,10 +46,10 @@ public class ProxyFactory<I> {
         InvocationHandler handler = null;
         switch (invokerType) {
             case SYNC:
-                handler = new SyncInvoker(dispatcher, interfaceClass, group);
+                handler = new SyncInvoker(loadBalancer, interfaceClass, group);
                 break;
             case ASYNC:
-                handler = new AsyncInvoker(dispatcher, interfaceClass, group);
+                handler = new AsyncInvoker(loadBalancer, interfaceClass, group);
                 break;
         }
 

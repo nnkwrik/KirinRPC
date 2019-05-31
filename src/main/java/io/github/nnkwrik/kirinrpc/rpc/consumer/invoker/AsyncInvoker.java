@@ -1,26 +1,30 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer.invoker;
 
 import io.github.nnkwrik.kirinrpc.common.util.Requires;
-import io.github.nnkwrik.kirinrpc.rpc.consumer.Dispatcher;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.cluster.ClusterInvoker;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.cluster.FailfastClusterInvoker;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.LoadBalancer;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author nnkwrik
  * @date 19/05/31 13:34
  */
 public class AsyncInvoker<T> extends AbstractInvoker {
-    private Dispatcher dispatcher;
     private Class<T> interfaceClass;
+    private ClusterInvoker clusterInvoker;
 
-    public AsyncInvoker(Dispatcher dispatcher, Class<T> interfaceClass, String group) {
+    public AsyncInvoker(LoadBalancer loadBalancer, Class<T> interfaceClass, String group) {
         super(interfaceClass, group);
-        this.dispatcher = dispatcher;
         this.interfaceClass = interfaceClass;
+        this.clusterInvoker = new FailfastClusterInvoker(loadBalancer);
     }
 
     @Override
-    public Object doInvoke(KirinRequest request) {
-        RPCFuture future = dispatcher.dispatch(request);
+    public Object doInvoke(KirinRequest request) throws ExecutionException, InterruptedException {
+        RPCFuture future = clusterInvoker.invoke(request);
 
         AsyncFutureContext.set(serviceMeta, future);
 

@@ -9,9 +9,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author nnkwrik
  * @date 19/05/28 8:25
  */
-public class RPCFuture implements Future<Object> {
+public class RPCFuture<T> implements Future<T> {
 
-    private volatile Object result;
+    private volatile T result;
     private volatile Status status = Status.NULL;
 
     private long requestId;
@@ -42,7 +42,7 @@ public class RPCFuture implements Future<Object> {
     }
 
     @Override
-    public Object get() throws InterruptedException, ExecutionException {
+    public T get() throws InterruptedException, ExecutionException {
         lock.lock();
         try {
             while (result == null) {
@@ -55,7 +55,7 @@ public class RPCFuture implements Future<Object> {
     }
 
     @Override
-    public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         long remain = unit.convert(timeout, TimeUnit.NANOSECONDS);
         lock.lock();
         try {
@@ -70,7 +70,7 @@ public class RPCFuture implements Future<Object> {
         return result;
     }
 
-    public void done(Object result) {
+    public void done(T result) {
         this.result = result;
         lock.lock();
         try {
