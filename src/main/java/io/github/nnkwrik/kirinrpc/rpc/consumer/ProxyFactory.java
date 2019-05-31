@@ -14,8 +14,11 @@ public class ProxyFactory<I> {
 
     private String group = Constants.ANY_GROUP;
 
+    private Dispatcher dispatcher;
+
     private ProxyFactory(Class<I> interfaceClass) {
         this.interfaceClass = interfaceClass;
+        this.dispatcher = new Dispatcher();
     }
 
     public static <I> ProxyFactory<I> factory(Class<I> interfaceClass) {
@@ -32,7 +35,7 @@ public class ProxyFactory<I> {
         Object proxy = Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(),
                 new Class<?>[]{interfaceClass},
-                new SyncInvoker(interfaceClass, group));
+                new SyncInvoker(dispatcher, interfaceClass, group));
 
         return interfaceClass.cast(proxy);
     }

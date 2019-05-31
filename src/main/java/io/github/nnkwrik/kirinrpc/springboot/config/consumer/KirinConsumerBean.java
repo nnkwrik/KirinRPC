@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class KirinConsumerBean<T> implements FactoryBean<T> {
 
-    //    @Autowired
     private ConsumerConfig consumerConfig;
 
     private Class<T> consumerInterface;
@@ -27,7 +26,6 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
 
     private RegistryClient registryClient;
 
-    //    private NettyConnector nettyConnector
     public KirinConsumerBean(ConsumerConfig consumerConfig, Class<T> consumerInterface, KirinConsumeService consumeServiceAnnotation) {
         this.consumerConfig = consumerConfig;
         this.consumerInterface = consumerInterface;
@@ -46,8 +44,7 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
             String msg = "Can't find provider for service " + consumerInterface.getName() + " when client boot";
             log.warn(msg);
         }
-        //创建proxy对象返回。调用proxy时实际是用这里的netty连接
-        System.out.println(consumerInterface.getName() + " --- " + consumeServiceAnnotation);
+        //创建proxy对象返回。调用proxy时实际是用netty进行远程调用
         return ProxyFactory.factory(consumerInterface).group(consumeServiceAnnotation.group()).newProxy();
     }
 
@@ -55,6 +52,5 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
     public Class<?> getObjectType() {
         return consumerInterface;
     }
-
 
 }

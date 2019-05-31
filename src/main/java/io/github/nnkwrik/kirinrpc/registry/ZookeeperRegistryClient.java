@@ -47,10 +47,6 @@ public class ZookeeperRegistryClient implements RegistryClient {
 
     //服务都绑定了哪些listener
     private final ConcurrentMap<ServiceMeta, NotifyListener> subscribeListener = new ConcurrentHashMap<>();
-    //服务对应的zookeeper 路径信息
-//    private final ConcurrentMap<ServiceMeta, PathChildrenCache> pathChildrenCaches = new ConcurrentHashMap<>();
-    //指定节点都提供了哪些服务
-//    private final ConcurrentMap<RegisterMeta.Address, Set<ServiceMeta>> serviceMetaMap = new ConcurrentHashMap<>();
 
     public ZookeeperRegistryClient(String registryAddress) {
         this.registryAddress = registryAddress;
@@ -178,11 +174,6 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     //获取新添加的服务信息
                     ServiceMeta serviceMeta = registerMeta.getServiceMeta();
 
-                    //作为address对应的服务添加到添加到map里
-//                    RegisterMeta.Address address = registerMeta.getAddress();
-//                    Set<ServiceMeta> serviceMetaSet = getServiceMeta(address);
-//                    serviceMetaSet.add(serviceMeta);
-
                     //通知该服务绑定的listener，告诉他们address开始提供服务
                     NotifyListener listener = subscribeListener.get(serviceMeta);
                     if (listener != null) {
@@ -197,31 +188,15 @@ public class ZookeeperRegistryClient implements RegistryClient {
                         //json解析失败
                         return;
                     }
-                    //还包含，说明没有移除
-//                    List<String> children = client.getChildren().forPath(directory);
-//                    String eventChildren = event.getData().getPath().split("/")[4];
-//                    if (children.contains(eventChildren)){
-//                        return;
-//                    }
 
                     //获取要移除的服务信息
                     ServiceMeta serviceMeta = registerMeta.getServiceMeta();
-
-                    //从address对应的服务里面移除
-//                    RegisterMeta.Address address = registerMeta.getAddress();
-//                    Set<ServiceMeta> serviceMetaSet = getServiceMeta(address);
-//                    serviceMetaSet.remove(serviceMeta);
 
                     //通知该服务绑定的listener，告诉他们address停止提供服务
                     NotifyListener listener = subscribeListener.get(serviceMeta);
                     if (listener != null) {
                         listener.notify(registerMeta, NotifyListener.NotifyEvent.CHILD_REMOVED);
                     }
-
-                    //address下已经不提供任何服务
-//                    if (serviceMetaSet.isEmpty()) {
-//                        log.info("Offline notify: {}.", address);
-//                    }
 
                     break;
                 }
@@ -237,45 +212,10 @@ public class ZookeeperRegistryClient implements RegistryClient {
         }
     }
 
-//    private PathChildrenCache createNewPathChildren(ServiceMeta serviceMeta) {
-//        if (pathChildrenCaches.containsKey(serviceMeta)) return null;
-//
-//        String directory = String.format("/kirinrpc/%s/%s",
-//                serviceMeta.getServiceGroup(),
-//                serviceMeta.getServiceName());
-//        PathChildrenCache newChildrenCache = new PathChildrenCache(configClient, directory, false);
-//
-//        if (pathChildrenCaches.putIfAbsent(serviceMeta, newChildrenCache) != null) {
-//            //新创建的PathChildrenCache没有用上 （putIfAbsent失败了）
-//            try {
-//                newChildrenCache.close();
-//                return null;
-//            } catch (IOException e) {
-//                if (log.isWarnEnabled()) {
-//                    log.warn("Close [PathChildrenCache] {} failed, {}.", directory, StackTraceUtil.stackTrace(e));
-//                }
-//            }
-//        }
-//
-//        return newChildrenCache;
-//    }
 
     private RegisterMeta parseRegisterMeta(String data) {
         String[] array_0 = data.split("/");
         return JsonUtil.fromJson(array_0[4], RegisterMeta.class);
     }
-
-//    private Set<ServiceMeta> getServiceMeta(RegisterMeta.Address address) {
-//        Set<ServiceMeta> serviceMetaSet = serviceMetaMap.get(address);
-//        if (serviceMetaSet == null) {
-//            Set<ServiceMeta> newServiceMetaSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
-//            serviceMetaSet = serviceMetaMap.putIfAbsent(address, newServiceMetaSet);
-//            if (serviceMetaSet == null) {
-//                serviceMetaSet = newServiceMetaSet;
-//            }
-//        }
-//        return serviceMetaSet;
-//    }
-
 
 }

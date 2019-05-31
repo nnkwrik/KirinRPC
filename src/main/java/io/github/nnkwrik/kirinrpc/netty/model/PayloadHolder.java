@@ -1,16 +1,13 @@
 package io.github.nnkwrik.kirinrpc.netty.model;
 
 /**
- * 序列化之前的KririnRequest
- *
  * @author nnkwrik
  * @date 19/05/01 9:47
  */
 public class PayloadHolder {
 
-    //status,id,timestamp
-
     private long id;
+
     private byte[] bytes;
 
     public PayloadHolder(long id) {

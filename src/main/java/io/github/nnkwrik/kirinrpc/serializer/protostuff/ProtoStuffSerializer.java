@@ -1,9 +1,5 @@
 package io.github.nnkwrik.kirinrpc.serializer.protostuff;
 
-import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
-import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
-import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
-import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;

@@ -4,7 +4,6 @@ import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
 import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
-import io.github.nnkwrik.kirinrpc.netty.util.PayloadUtil;
 import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
@@ -39,7 +38,7 @@ public class ProviderProcessor implements RequestProcessor {
 
     @Override
     public void handleRequest(Channel channel, RequestPayload requestPayload) throws Exception {
-        RPCTask task = new RPCTask(channel, requestPayload, responseSender, providerLookup);
+        ProviderTask task = new ProviderTask(channel, requestPayload, responseSender, providerLookup);
 
         submit(task);
     }
@@ -49,7 +48,8 @@ public class ProviderProcessor implements RequestProcessor {
         log.error("Handling exception (requestId = {}).", requestPayload.id());
 
         String msg = "Unknown Error happened when solve remote call";
-        responseSender.sendErrorResponse(channel, new KirinRemoteException(msg, cause, Status.SERVER_ERROR));
+        responseSender.sendErrorResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                new KirinRemoteException(msg, cause, Status.SERVICE_UNEXPECTED_ERROR));
 
     }
 
@@ -80,13 +80,14 @@ public class ProviderProcessor implements RequestProcessor {
         private Serializer serializer = SerializerHolder.serializerImpl();
 
         @Override
-        public void sendSuccessResponse(Channel channel, Object invokeResult) {
-            final Long requestId = PayloadUtil.getRequestId(channel);
+        public void sendSuccessResponse(Channel channel, long requestId, long requestTime, java.lang.Object invokeResult) {
             log.info("Success to invoke provider (requestId = {}), result = [{}].", requestId, invokeResult.toString());
             KirinResponse response = new KirinResponse();
+            response.setProviderName(System.getProperty("kirin.provider.name"));
             response.setResult(invokeResult);
 
             ResponsePayload responsePayload = new ResponsePayload(requestId);
+            responsePayload.timestamp(requestTime);
             responsePayload.status(Status.OK.value());
             byte[] bytes = serializer.writeObject(response);
             responsePayload.bytes(bytes);
@@ -95,14 +96,22 @@ public class ProviderProcessor implements RequestProcessor {
         }
 
         @Override
-        public void sendFailResponse(Channel channel, KirinRemoteException e) {
-            final Long requestId = PayloadUtil.getRequestId(channel);
-            log.error("Excepted Error Happened when solve remote call (requestId = {}):\r\n{}", requestId, StackTraceUtil.stackTrace(e));
+        public void sendFailResponse(Channel channel, long requestId, long requestTime, KirinRemoteException e) {
+
+            if (e.getStatus() == Status.SERVICE_UNEXPECTED_ERROR) {
+                log.error("Status can't be SERVICE_UNEXPECTED_ERROR if you want to send fail response.So this response will process by #sendErrorResponse()");
+                sendErrorResponse(channel, requestId, requestTime, e);
+            }
+
+            log.error("Excepted Error Happened when solve remote call (requestId = {}):\r\n{}",
+                    requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
+            response.setProviderName(System.getProperty("kirin.provider.name"));
             response.setError(e);
 
             ResponsePayload responsePayload = new ResponsePayload(requestId);
+            responsePayload.timestamp(requestTime);
             responsePayload.status(e.getStatus().value());
             byte[] bytes = serializer.writeObject(response);
             responsePayload.bytes(bytes);
@@ -111,16 +120,19 @@ public class ProviderProcessor implements RequestProcessor {
         }
 
         @Override
-        public void sendErrorResponse(Channel channel, KirinRemoteException e) {
-            final Long requestId = PayloadUtil.getRequestId(channel);
-            log.error("Unknown Error happened when solve remote call (requestId = {}):\r\n{}", requestId, StackTraceUtil.stackTrace(e));
+        public void sendErrorResponse(Channel channel, long requestId, long requestTime, KirinRemoteException e) {
+            log.error("Unknown Error happened when solve remote call (requestId = {}):\r\n{}",
+                    requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
+            response.setProviderName(System.getProperty("kirin.provider.name"));
+            e.setStatus(Status.SERVICE_UNEXPECTED_ERROR);//强制设为SERVICE_UNEXPECTED_ERROR
             response.setError(e);
 
             ResponsePayload responsePayload = new ResponsePayload(requestId);
+            responsePayload.timestamp(requestTime);
             responsePayload.status(e.getStatus().value());
-            byte[] bytes = SerializerHolder.serializerImpl().writeObject(response);
+            byte[] bytes = serializer.writeObject(response);
             responsePayload.bytes(bytes);
 
             sendResponsePayload(channel, responsePayload, true);
@@ -141,10 +153,10 @@ public class ProviderProcessor implements RequestProcessor {
 
                     if (channelFuture.isSuccess()) {
                         log.debug("Success to send response to request {},spent {} milliseconds during request",
-                                responsePayload.id(), PayloadUtil.getProcessingTime(channel, TimeUnit.MILLISECONDS));
+                                responsePayload.id(), System.currentTimeMillis() - responsePayload.timestamp());
                     } else {
                         log.error("Fail to send response to request {},spent {} milliseconds during request",
-                                responsePayload.id(), PayloadUtil.getProcessingTime(channel, TimeUnit.MILLISECONDS));
+                                responsePayload.id(), System.currentTimeMillis() - responsePayload.timestamp());
                         channel.close();
                         return;
                     }

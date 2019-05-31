@@ -3,7 +3,6 @@ package io.github.nnkwrik.kirinrpc.netty.handler.srv;
 import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.netty.IdealStateException;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
-import io.github.nnkwrik.kirinrpc.netty.util.PayloadUtil;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderProcessor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -36,7 +35,6 @@ public class AcceptorHandler extends ChannelInboundHandlerAdapter {
         Channel ch = ctx.channel();
 
         if (msg instanceof RequestPayload) {
-            PayloadUtil.saveRequestInfoInChannel(ch, (RequestPayload) msg);
             try {
                 processor.handleRequest(ch, (RequestPayload) msg);
             } catch (Throwable t) {

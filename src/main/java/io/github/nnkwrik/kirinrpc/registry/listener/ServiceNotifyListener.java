@@ -54,10 +54,6 @@ public class ServiceNotifyListener implements NotifyListener {
                     registerMeta.getAddress(),
                     registerMeta.getServiceMeta());
 
-//            if (serviceConnections.isEmpty()) {
-//                //TODO 没有服务提供者了
-//            }
-
         }
     }
 

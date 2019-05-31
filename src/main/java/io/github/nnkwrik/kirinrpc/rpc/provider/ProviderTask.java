@@ -2,7 +2,6 @@ package io.github.nnkwrik.kirinrpc.rpc.provider;
 
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
-import io.github.nnkwrik.kirinrpc.netty.util.PayloadUtil;
 import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceWrapper;
@@ -20,20 +19,20 @@ import java.util.stream.Collectors;
  * @date 19/05/18 16:05
  */
 @Slf4j
-public class RPCTask implements Runnable {
+public class ProviderTask implements Runnable {
 
     private final Channel channel;
 
     private final RequestPayload requestPayload;
 
-    private final ResponseSender responseSender;
+    private final ResponseSender sender;
 
     private final ProviderLookup providerLookup;
 
-    public RPCTask(Channel channel, RequestPayload requestPayload, ResponseSender responseSender, ProviderLookup providerLookup) {
+    public ProviderTask(Channel channel, RequestPayload requestPayload, ResponseSender sender, ProviderLookup providerLookup) {
         this.channel = channel;
         this.requestPayload = requestPayload;
-        this.responseSender = responseSender;
+        this.sender = sender;
         this.providerLookup = providerLookup;
     }
 
@@ -47,7 +46,8 @@ public class RPCTask implements Runnable {
                 request = SerializerHolder.serializerImpl().readObject(requestPayload.bytes(), KirinRequest.class);
             } catch (Throwable t) {
                 String msg = "Can't solve request payload.Fail to deserialize.";
-                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, t, Status.BAD_REQUEST));
+                sender.sendFailResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                        new KirinRemoteException(msg, t, Status.BAD_REQUEST));
                 return;
             }
 
@@ -56,7 +56,8 @@ public class RPCTask implements Runnable {
                 String msg = String.format("Consumer excepted provider name is %s,but this provider name is %s.Refuse RPC request.",
                         request.getProviderName(),
                         System.getProperty("kirin.provider.name"));
-                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, Status.APP_FLOW_CONTROL));
+                sender.sendFailResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                        new KirinRemoteException(msg, Status.APP_FLOW_CONTROL));
                 return;
             }
 
@@ -67,7 +68,8 @@ public class RPCTask implements Runnable {
                 String msg = String.format("Can't lookup service provider for [serviceName = %s, serviceGroup = %s]",
                         request.getServiceMeta().getServiceName(),
                         request.getServiceMeta().getServiceGroup());
-                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, Status.SERVICE_NOT_FOUND));
+                sender.sendFailResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                        new KirinRemoteException(msg, Status.SERVICE_NOT_FOUND));
                 return;
             }
 
@@ -77,26 +79,30 @@ public class RPCTask implements Runnable {
                 invokeResult = invoke(request, serviceProvider);
             } catch (InvocationTargetException e) {
                 String msg = "Fail to invoke service for RPC request.";
-                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
+                sender.sendFailResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                        new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
                 return;
             }
 
             //发送invoke结果
             try {
-                responseSender.sendSuccessResponse(channel, invokeResult);
+                sender.sendSuccessResponse(channel, requestPayload.id(), requestPayload.timestamp(), invokeResult);
             } catch (IllegalStateException e) {
                 String msg = "Fail to serialize response.";
-                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
+                sender.sendFailResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                        new KirinRemoteException(msg, e, Status.SERVICE_EXPECTED_ERROR));
                 return;
             } catch (Throwable t) {
                 String msg = "Fail to send response.";
-                responseSender.sendFailResponse(channel, new KirinRemoteException(msg, t, Status.SERVICE_EXPECTED_ERROR));
+                sender.sendFailResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                        new KirinRemoteException(msg, t, Status.SERVICE_EXPECTED_ERROR));
                 return;
             }
 
         } catch (Throwable t) {
             String msg = "Unknown error happened when run rpc task";
-            responseSender.sendErrorResponse(channel, new KirinRemoteException(msg, t, Status.SERVER_ERROR));
+            sender.sendErrorResponse(channel, requestPayload.id(), requestPayload.timestamp(),
+                    new KirinRemoteException(msg, t, Status.SERVICE_UNEXPECTED_ERROR));
         }
     }
 
@@ -109,9 +115,8 @@ public class RPCTask implements Runnable {
         Object[] args = request.getArgs();
 
 
-        log.debug("Invoke service for RPC request(requestId = {}). " +
+        log.debug("Invoke service for RPC request. " +
                         "[providerClass = {}, methodName = {}, argTypes = {}, args = {}]",
-                PayloadUtil.getRequestId(channel),
                 providerClass.getName(),
                 methodName,
                 Arrays.stream(argTypes).map(Class::getName).collect(Collectors.toList()),

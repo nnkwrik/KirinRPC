@@ -113,6 +113,7 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
                     f.channel().pipeline().fireChannelInactive();
                 } else {
                     Channel newConnection = future.channel();
+                    //把无效channel替换为有效的。
                     ConnectionWatchdog watchdog = watchdogMap.remove(connection);
                     watchdogMap.put(newConnection, watchdog);
                     ConnectorManager.getInstance()

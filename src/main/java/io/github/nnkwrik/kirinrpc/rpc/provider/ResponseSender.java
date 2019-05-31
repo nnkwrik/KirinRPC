@@ -10,10 +10,10 @@ import io.netty.channel.Channel;
  */
 public interface ResponseSender {
 
-    void sendSuccessResponse(Channel channel, Object invokeResult);
+    void sendSuccessResponse(Channel channel, long requestId, long requestTime, Object invokeResult);
 
-    void sendFailResponse(Channel channel, KirinRemoteException e);
+    void sendFailResponse(Channel channel, long requestId, long requestTime, KirinRemoteException e);
 
-    void sendErrorResponse(Channel channel, KirinRemoteException e);
+    void sendErrorResponse(Channel channel, long requestId, long requestTime, KirinRemoteException e);
 
 }

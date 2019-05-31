@@ -1,14 +1,11 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer;
 
-import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
-import io.netty.channel.Channel;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.AbstractMap;
 
 /**
  * @author nnkwrik
@@ -16,11 +13,11 @@ import java.util.AbstractMap;
  */
 public class SyncInvoker<T> implements InvocationHandler {
     private ServiceMeta serviceMeta;
-    private ConnectorManager connectorManager;
+    private Dispatcher dispatcher;
 
-    public SyncInvoker(Class<T> interfaceClass, String group) {
-        serviceMeta = new ServiceMeta(interfaceClass.getName(), group);
-        connectorManager = ConnectorManager.getInstance();
+    public SyncInvoker(Dispatcher dispatcher, Class<T> interfaceClass, String group) {
+        this.dispatcher = dispatcher;
+        this.serviceMeta = new ServiceMeta(interfaceClass.getName(), group);
     }
 
     @Override
@@ -40,24 +37,25 @@ public class SyncInvoker<T> implements InvocationHandler {
                 throw new IllegalStateException(String.valueOf(method));
             }
         }
-        AbstractMap.SimpleEntry<String, Channel> entry = connectorManager.chooseConnection(serviceMeta);
-        String providerName = entry.getKey();
-        Channel connection = entry.getValue();
 
         KirinRequest request = new KirinRequest();
-        request.setProviderName(providerName);
         request.setServiceMeta(serviceMeta);
         request.setMethodName(method.getName());
         request.setArgTypes(method.getParameterTypes());
         request.setArgs(args);
 
-        RPCFuture future = connectorManager.sendRequest(connection, request);
-        Object result = future.get().getResult();
+        RPCFuture future = dispatcher.dispatch(request);
+        Object result = future.get();
 
-        if (result instanceof KirinRemoteException) {
-            throw (KirinRemoteException) result;
+        switch (future.status()) {
+            case SUCCESS:
+                return result;
+            case FAIL:
+                throw (KirinRemoteException) result;
+            case ERROR:
+                throw (KirinRemoteException) result;
         }
 
-        return result;
+        return null;
     }
 }

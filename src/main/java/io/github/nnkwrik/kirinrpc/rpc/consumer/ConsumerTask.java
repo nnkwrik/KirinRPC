@@ -1,11 +1,11 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer;
 
-import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.github.nnkwrik.kirinrpc.netty.model.ResponsePayload;
 import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
 import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
+import io.netty.channel.Channel;
 
 /**
  * @author nnkwrik
@@ -13,13 +13,16 @@ import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
  */
 public class ConsumerTask implements Runnable {
 
+    private final Channel channel;
+
     private final ResponsePayload responsePayload;
 
-    private final ConnectorManager connectorManager;
+    private final ResponseReceiver receiver;
 
-    public ConsumerTask(ResponsePayload responsePayload) {
+    public ConsumerTask(Channel channel, ResponsePayload responsePayload, ResponseReceiver receiver) {
+        this.channel = channel;
         this.responsePayload = responsePayload;
-        this.connectorManager = ConnectorManager.getInstance();
+        this.receiver = receiver;
     }
 
     @Override
@@ -32,6 +35,23 @@ public class ConsumerTask implements Runnable {
             response = new KirinResponse();
             response.setError(new KirinRemoteException(msg, t, Status.DESERIALIZATION_FAIL));
         }
-        connectorManager.receiveResponse(responsePayload.id(), response);
+
+        java.lang.Object result = response.getResult();
+        if (result instanceof KirinRemoteException
+                && ((KirinRemoteException) result).getStatus() == Status.SERVICE_UNEXPECTED_ERROR) {
+
+            receiver.receiveErrorResponse(channel, responsePayload.id(), response.getProviderName(),
+                    (KirinRemoteException) result);
+
+        } else if (result instanceof KirinRemoteException) {
+
+            receiver.receiveFailResponse(channel, responsePayload.id(), response.getProviderName(),
+                    (KirinRemoteException) result);
+
+        } else {
+
+            receiver.receiveSuccessResponse(channel, responsePayload.id(), response.getProviderName(), result);
+
+        }
     }
 }

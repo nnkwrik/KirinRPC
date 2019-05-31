@@ -11,6 +11,8 @@ import java.io.Serializable;
 @Data
 public class KirinResponse implements Serializable {
 
+    private String providerName;
+
     private Object result; // 响应结果对象, 也可能是异常对象, 由响应状态决定
 
     public void setError(Throwable cause) {

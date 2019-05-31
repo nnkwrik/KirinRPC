@@ -67,6 +67,7 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
                         in.readBytes(bytes);
 
                         ResponsePayload responseHolder = new ResponsePayload(header.id());
+                        responseHolder.timestamp(System.currentTimeMillis());
                         responseHolder.status(header.status());
                         responseHolder.bytes(bytes);
                         out.add(responseHolder);

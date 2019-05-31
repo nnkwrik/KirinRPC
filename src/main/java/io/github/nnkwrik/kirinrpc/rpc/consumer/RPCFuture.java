@@ -1,12 +1,9 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer;
 
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
-import io.github.nnkwrik.kirinrpc.rpc.model.KirinResponse;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.Map;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,19 +11,21 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author nnkwrik
  * @date 19/05/28 8:25
  */
-public class RPCFuture implements Future<KirinResponse> {
+public class RPCFuture implements Future<Object> {
 
-    private volatile KirinRequest request;
-    private volatile KirinResponse response;
+    private volatile Object result;
+    private volatile Status status = Status.NULL;
 
     private long requestId;
+
+    public static final Map<Long, RPCFuture> sentMsg = new ConcurrentHashMap<>();
 
     private ReentrantLock lock = new ReentrantLock();
     private Condition condition = lock.newCondition();
 
-    public RPCFuture(KirinRequest request, long requestId) {
-        this.request = request;
+    public RPCFuture(long requestId) {
         this.requestId = requestId;
+        sentMsg.put(requestId,this);
     }
 
     @Override
@@ -41,46 +40,61 @@ public class RPCFuture implements Future<KirinResponse> {
 
     @Override
     public boolean isDone() {
-        return response != null ? true : false;
+        return result != null ? true : false;
     }
 
     @Override
-    public KirinResponse get() throws InterruptedException, ExecutionException {
+    public Object get() throws InterruptedException, ExecutionException {
         lock.lock();
         try {
-            while (response == null) {
+            while (result == null) {
                 condition.await();
             }
         } finally {
             lock.unlock();
         }
-        return response;
+        return result;
     }
 
     @Override
-    public KirinResponse get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         long remain = unit.convert(timeout, TimeUnit.NANOSECONDS);
         lock.lock();
         try {
             while ((remain = condition.awaitNanos(remain)) <= 0) {
-                if (response != null) {
+                if (result != null) {
                     break;
                 }
             }
         } finally {
             lock.unlock();
         }
-        return response;
+        return result;
     }
 
-    public void done(KirinResponse response) {
-        this.response = response;
+    public void done(Object result) {
+        this.result = result;
         lock.lock();
         try {
             condition.signalAll();
         } finally {
             lock.unlock();
         }
+    }
+
+    public void status(Status status) {
+        this.status = status;
+    }
+
+    public Status status(){
+        return status;
+    }
+
+    enum Status {
+        NULL,
+        SUCCESS,
+        FAIL,
+        ERROR
     }
 
 }

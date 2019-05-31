@@ -9,6 +9,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.DecoderException;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -38,6 +39,7 @@ public class ConnectorHandler extends ChannelInboundHandlerAdapter {
             }
         } else {
             log.warn("Unexpected message type received: {}, channel: {}.", msg.getClass(), ch);
+            ReferenceCountUtil.release(msg);
         }
 
     }

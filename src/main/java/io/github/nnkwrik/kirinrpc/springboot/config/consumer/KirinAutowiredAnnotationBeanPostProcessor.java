@@ -1,6 +1,7 @@
 package io.github.nnkwrik.kirinrpc.springboot.config.consumer;
 
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinConsumeService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
@@ -43,6 +44,7 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
  * @date 19/05/23 10:42
  */
 @Component
+@Slf4j
 public class KirinAutowiredAnnotationBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter
         implements MergedBeanDefinitionPostProcessor, PriorityOrdered, ApplicationContextAware {
 
@@ -292,7 +294,9 @@ public class KirinAutowiredAnnotationBeanPostProcessor extends InstantiationAwar
             ConsumerConfig consumerConfig = applicationContext.getBean(ConsumerConfig.class);
             consumerBean = new KirinConsumerBean<>(consumerConfig, consumerClass, consumeServiceAnnotation);
 
-            consumerBeansCache.putIfAbsent(consumerBeanCacheKey, consumerBean);
+            if (consumerBeansCache.putIfAbsent(consumerBeanCacheKey, consumerBean) == null) {
+                log.debug("Create instance of singleton remote proxy bean '{}/{}'",consumeServiceAnnotation.group(),consumerClass.getName());
+            }
         }
 
         return consumerBean;

@@ -1,7 +1,6 @@
 package io.github.nnkwrik.kirinrpc.rpc;
 
 import io.github.nnkwrik.kirinrpc.netty.protocol.Status;
-import lombok.Data;
 
 /**
  * @author nnkwrik
@@ -22,13 +21,17 @@ public class KirinRemoteException extends RuntimeException {
         this.status = status;
     }
 
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public Status getStatus() {
         return status;
     }
 
     @Override
     public String toString() {
-        String s = getClass().getName() + "(status="+this.status+")";
+        String s = getClass().getName() + "(status=" + this.status + ")";
         String message = getLocalizedMessage();
         return (message != null) ? (s + ": " + message) : s;
     }
