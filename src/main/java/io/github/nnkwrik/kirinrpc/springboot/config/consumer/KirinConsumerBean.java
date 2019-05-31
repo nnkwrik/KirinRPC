@@ -45,7 +45,10 @@ public class KirinConsumerBean<T> implements FactoryBean<T> {
             log.warn(msg);
         }
         //创建proxy对象返回。调用proxy时实际是用netty进行远程调用
-        return ProxyFactory.factory(consumerInterface).group(consumeServiceAnnotation.group()).newProxy();
+        return ProxyFactory.factory(consumerInterface)
+                .group(consumeServiceAnnotation.group())
+                .invokerType(consumeServiceAnnotation.invokeType())
+                .newProxy();
     }
 
     @Override

@@ -1,7 +1,10 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer;
 
 import io.github.nnkwrik.kirinrpc.common.Constants;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.AsyncInvoker;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.SyncInvoker;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 /**
@@ -13,6 +16,8 @@ public class ProxyFactory<I> {
     private Class<I> interfaceClass;
 
     private String group = Constants.ANY_GROUP;
+
+    private InvokerType invokerType = InvokerType.SYNC;
 
     private Dispatcher dispatcher;
 
@@ -30,13 +35,32 @@ public class ProxyFactory<I> {
         return this;
     }
 
+    public ProxyFactory<I> invokerType(InvokerType invokerType) {
+        this.invokerType = invokerType;
+        return this;
+    }
+
     public I newProxy() {
+        InvocationHandler handler = null;
+        switch (invokerType) {
+            case SYNC:
+                handler = new SyncInvoker(dispatcher, interfaceClass, group);
+                break;
+            case ASYNC:
+                handler = new AsyncInvoker(dispatcher, interfaceClass, group);
+                break;
+        }
 
         Object proxy = Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(),
                 new Class<?>[]{interfaceClass},
-                new SyncInvoker(dispatcher, interfaceClass, group));
+                handler);
 
         return interfaceClass.cast(proxy);
+    }
+
+    public enum InvokerType {
+        SYNC,
+        ASYNC
     }
 }

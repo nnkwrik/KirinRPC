@@ -1,6 +1,4 @@
-package io.github.nnkwrik.kirinrpc.rpc.consumer;
-
-import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
+package io.github.nnkwrik.kirinrpc.rpc.consumer.invoker;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -90,7 +88,7 @@ public class RPCFuture implements Future<Object> {
         return status;
     }
 
-    enum Status {
+    public enum Status {
         NULL,
         SUCCESS,
         FAIL,

@@ -1,6 +1,7 @@
 package io.github.nnkwrik.kirinrpc.springboot.annotation;
 
 import io.github.nnkwrik.kirinrpc.common.Constants;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.ProxyFactory;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -16,4 +17,6 @@ import java.lang.annotation.Target;
 public @interface KirinConsumeService {
 
     String group() default Constants.ANY_GROUP;
+
+    ProxyFactory.InvokerType invokeType() default ProxyFactory.InvokerType.SYNC;
 }

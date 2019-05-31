@@ -3,6 +3,7 @@ package io.github.nnkwrik.kirinrpc.rpc.consumer;
 import io.github.nnkwrik.kirinrpc.ConnectFailedException;
 import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.RPCFuture;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;

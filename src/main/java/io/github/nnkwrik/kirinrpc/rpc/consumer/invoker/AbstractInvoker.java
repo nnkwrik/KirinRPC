@@ -1,22 +1,20 @@
-package io.github.nnkwrik.kirinrpc.rpc.consumer;
+package io.github.nnkwrik.kirinrpc.rpc.consumer.invoker;
 
-import io.github.nnkwrik.kirinrpc.rpc.KirinRemoteException;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author nnkwrik
- * @date 19/05/27 19:57
+ * @date 19/05/31 13:35
  */
-public class SyncInvoker<T> implements InvocationHandler {
-    private ServiceMeta serviceMeta;
-    private Dispatcher dispatcher;
+public abstract class AbstractInvoker<T> implements InvocationHandler {
+    protected ServiceMeta serviceMeta;
 
-    public SyncInvoker(Dispatcher dispatcher, Class<T> interfaceClass, String group) {
-        this.dispatcher = dispatcher;
+    public AbstractInvoker(Class<T> interfaceClass, String group) {
         this.serviceMeta = new ServiceMeta(interfaceClass.getName(), group);
     }
 
@@ -44,18 +42,8 @@ public class SyncInvoker<T> implements InvocationHandler {
         request.setArgTypes(method.getParameterTypes());
         request.setArgs(args);
 
-        RPCFuture future = dispatcher.dispatch(request);
-        Object result = future.get();
-
-        switch (future.status()) {
-            case SUCCESS:
-                return result;
-            case FAIL:
-                throw (KirinRemoteException) result;
-            case ERROR:
-                throw (KirinRemoteException) result;
-        }
-
-        return null;
+        return doInvoke(request);
     }
+
+    public abstract Object doInvoke(KirinRequest request) throws ExecutionException, InterruptedException;
 }
