@@ -4,6 +4,7 @@ import io.github.nnkwrik.kirinrpc.common.Constants;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.AsyncInvoker;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.SyncInvoker;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.LoadBalancer;
+import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.RandomLoadBalancer;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.SimpleLoadBalancer;
 
 import java.lang.reflect.InvocationHandler;
@@ -25,7 +26,7 @@ public class ProxyFactory<I> {
 
     private ProxyFactory(Class<I> interfaceClass) {
         this.interfaceClass = interfaceClass;
-        this.loadBalancer = new SimpleLoadBalancer();
+        this.loadBalancer = new RandomLoadBalancer();
     }
 
     public static <I> ProxyFactory<I> factory(Class<I> interfaceClass) {

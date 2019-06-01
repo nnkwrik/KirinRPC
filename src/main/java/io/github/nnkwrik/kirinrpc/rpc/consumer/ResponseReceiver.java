@@ -10,9 +10,9 @@ import io.netty.channel.Channel;
  */
 public interface ResponseReceiver {
 
-    void receiveSuccessResponse(Channel channel, long requestId, String providerName, Object result);
+    void receiveSuccessResponse(Channel channel, long requestId, Object result);
 
-    void receiveFailResponse(Channel channel, long requestId, String providerName, KirinRemoteException e);
+    void receiveFailResponse(Channel channel, long requestId, KirinRemoteException e);
 
-    void receiveErrorResponse(Channel channel, long requestId, String providerName, KirinRemoteException e);
+    void receiveErrorResponse(Channel channel, long requestId, KirinRemoteException e);
 }

@@ -7,4 +7,9 @@ package io.github.nnkwrik.kirinrpc.common;
 public class Constants {
 
     public static final String ANY_GROUP = "any";
+
+    public static final int DEFAULT_WIGHT = 50;
+
+    public static final int DEFAULT_WARM_UP_TIME = 10 * 60 * 1000;
+
 }

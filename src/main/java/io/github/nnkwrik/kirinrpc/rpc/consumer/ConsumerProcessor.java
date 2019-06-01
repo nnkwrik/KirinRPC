@@ -56,8 +56,8 @@ public class ConsumerProcessor implements ResponseProcessor {
     public static class ResponseReceiverImpl implements ResponseReceiver {
 
         @Override
-        public void receiveSuccessResponse(Channel channel, long requestId, String providerName, Object result) {
-            log.info("Receive success response for [requestId = {}] from provider {},result is {}.", requestId, providerName, result);
+        public void receiveSuccessResponse(Channel channel, long requestId, Object result) {
+            log.info("Receive success response for [requestId = {}],result is {}.", requestId, result);
             RPCFuture future = RPCFuture.sentMsg.remove(requestId);
             if (future != null) {
                 future.status(RPCFuture.Status.SUCCESS);
@@ -66,8 +66,8 @@ public class ConsumerProcessor implements ResponseProcessor {
         }
 
         @Override
-        public void receiveFailResponse(Channel channel, long requestId, String providerName, KirinRemoteException e) {
-            log.error("Receive fail response for [requestId = {}] from provider {},exception is {}.", requestId, providerName, e);
+        public void receiveFailResponse(Channel channel, long requestId, KirinRemoteException e) {
+            log.error("Receive fail response for [requestId = {}],exception is {}.", requestId, e);
             RPCFuture future = RPCFuture.sentMsg.remove(requestId);
             if (future != null) {
                 future.status(RPCFuture.Status.FAIL);
@@ -76,8 +76,8 @@ public class ConsumerProcessor implements ResponseProcessor {
         }
 
         @Override
-        public void receiveErrorResponse(Channel channel, long requestId, String providerName, KirinRemoteException e) {
-            log.error("Receive error response for [requestId = {}] from provider {},error is {}.", requestId, providerName, e);
+        public void receiveErrorResponse(Channel channel, long requestId, KirinRemoteException e) {
+            log.error("Receive error response for [requestId = {}],error is {}.", requestId, e);
             ConnectorManager.getInstance().removeInactiveConnection(channel);
             RPCFuture future = RPCFuture.sentMsg.remove(requestId);
             if (future != null) {

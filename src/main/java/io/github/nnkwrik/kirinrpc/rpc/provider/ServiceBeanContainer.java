@@ -22,22 +22,28 @@ public class ServiceBeanContainer implements ProviderLookup {
 
     private final ConcurrentMap<String, Object> serviceBeans = new ConcurrentHashMap<>();
 
-    public List<ServiceMeta> addServiceBean(Collection<Object> serviceBeans) {
+    public List<ServiceMeta> addServiceBeans(Collection<Object> serviceBeans) {
         List<ServiceMeta> serviceMetaList = new ArrayList<>();
         for (Object serviceBean : serviceBeans) {
-            List<String> interfaceName = Arrays.stream(serviceBean.getClass().getInterfaces())
-                    .map(Class::getName).collect(Collectors.toList());
-
-            String serviceGroup = serviceBean.getClass().getAnnotation(KirinProvideService.class).group();
-            interfaceName.stream().forEach(serviceName -> {
-                log.info("Loading service: {} ,addressChannel : {}", serviceName, serviceGroup);
-                ServiceMeta serviceMeta = new ServiceMeta(serviceName, serviceGroup);
-                String serviceKey = serviceGroup + "/" + serviceName;
-                this.serviceBeans.put(serviceKey, serviceBean);
-                serviceMetaList.add(serviceMeta);
-            });
-
+            serviceMetaList.addAll(addServiceBean(serviceBean));
         }
+        return serviceMetaList;
+    }
+
+    public List<ServiceMeta> addServiceBean(Object serviceBean) {
+        List<ServiceMeta> serviceMetaList = new ArrayList<>();
+
+        List<String> interfaceName = Arrays.stream(serviceBean.getClass().getInterfaces())
+                .map(Class::getName).collect(Collectors.toList());
+
+        String serviceGroup = serviceBean.getClass().getAnnotation(KirinProvideService.class).group();
+        interfaceName.stream().forEach(serviceName -> {
+            log.info("Loading service: {} ,addressChannel : {}", serviceName, serviceGroup);
+            ServiceMeta serviceMeta = new ServiceMeta(serviceName, serviceGroup);
+            String serviceKey = serviceGroup + "/" + serviceName;
+            serviceBeans.put(serviceKey, serviceBean);
+            serviceMetaList.add(serviceMeta);
+        });
         return serviceMetaList;
     }
 

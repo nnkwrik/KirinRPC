@@ -63,7 +63,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                 isConnected.countDown();
             } else if (newState == ConnectionState.RECONNECTED) {
 
-                log.info("Zookeeper connection has been re-established, will re-subscribe and re-addServiceBean.");
+                log.info("Zookeeper connection has been re-established, will re-subscribe and re-addServiceBeans.");
 //                // 重新订阅
                 for (ServiceMeta serviceMeta : subscribeListener.keySet()) {
                     watchNode(serviceMeta);
@@ -92,7 +92,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     registerMetaMap.put(meta, RegisterState.PREPARE);
                     createNode(meta);
                 } catch (InterruptedException e) {
-                    log.warn("[addServiceBean.executor] interrupted.");
+                    log.warn("[addServiceBeans.executor] interrupted.");
                 } catch (Throwable t) {
                     if (meta != null) {
                         log.error("Register [{}] fail: {}, will try again...", meta.getServiceMeta(), t.getStackTrace());
@@ -126,7 +126,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
 
         // The znode will be deleted upon the client's disconnect.
         try {
-            configClient.create().withMode(CreateMode.EPHEMERAL).inBackground((client, event) -> {
+            configClient.create().withMode(CreateMode.EPHEMERAL_SEQUENTIAL).inBackground((client, event) -> {
                 if (event.getResultCode() == KeeperException.Code.OK.intValue()) {
                     registerMetaMap.put(meta, RegisterState.DONE);
                 }
@@ -136,7 +136,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     JsonUtil.toJson(meta)));
         } catch (Exception e) {
             if (log.isWarnEnabled()) {
-                log.warn("Create addServiceBean meta: {} path failed, {}.", meta, StackTraceUtil.stackTrace(e));
+                log.warn("Create addServiceBeans meta: {} path failed, {}.", meta, StackTraceUtil.stackTrace(e));
             }
         }
 
@@ -166,23 +166,23 @@ public class ZookeeperRegistryClient implements RegistryClient {
 
             switch (event.getType()) {
                 case CHILD_ADDED: {
+                    long sequenceNum = parseSequenceNum(event.getData().getPath());
                     RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
                     if (registerMeta == null) {
                         //json解析失败
                         return;
                     }
-                    //获取新添加的服务信息
-                    ServiceMeta serviceMeta = registerMeta.getServiceMeta();
 
                     //通知该服务绑定的listener，告诉他们address开始提供服务
-                    NotifyListener listener = subscribeListener.get(serviceMeta);
+                    NotifyListener listener = subscribeListener.get(registerMeta.getServiceMeta());
                     if (listener != null) {
-                        listener.notify(registerMeta, NotifyListener.NotifyEvent.CHILD_ADDED);
+                        listener.notify(registerMeta, sequenceNum, NotifyListener.NotifyEvent.CHILD_ADDED);
                     }
 
                     break;
                 }
                 case CHILD_REMOVED: {
+                    long sequenceNum = parseSequenceNum(event.getData().getPath());
                     RegisterMeta registerMeta = parseRegisterMeta(event.getData().getPath());
                     if (registerMeta == null) {
                         //json解析失败
@@ -195,7 +195,7 @@ public class ZookeeperRegistryClient implements RegistryClient {
                     //通知该服务绑定的listener，告诉他们address停止提供服务
                     NotifyListener listener = subscribeListener.get(serviceMeta);
                     if (listener != null) {
-                        listener.notify(registerMeta, NotifyListener.NotifyEvent.CHILD_REMOVED);
+                        listener.notify(registerMeta, sequenceNum, NotifyListener.NotifyEvent.CHILD_REMOVED);
                     }
 
                     break;
@@ -212,10 +212,15 @@ public class ZookeeperRegistryClient implements RegistryClient {
         }
     }
 
+    private long parseSequenceNum(String data) {
+        String[] array_0 = data.split("/");
+        String meta = array_0[4];
+        return Long.parseLong(meta.substring(meta.length() - 10));
+    }
 
     private RegisterMeta parseRegisterMeta(String data) {
         String[] array_0 = data.split("/");
-        return JsonUtil.fromJson(array_0[4], RegisterMeta.class);
+        String meta = array_0[4];
+        return JsonUtil.fromJson(meta, RegisterMeta.class);
     }
-
 }

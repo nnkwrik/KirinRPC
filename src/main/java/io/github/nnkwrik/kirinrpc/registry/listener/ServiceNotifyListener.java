@@ -5,6 +5,8 @@ import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,14 +33,16 @@ public class ServiceNotifyListener implements NotifyListener {
 
 
     @Override
-    public void notify(RegisterMeta registerMeta, NotifyListener.NotifyEvent event) {
+    public void notify(RegisterMeta registerMeta, long sequenceNum, NotifyListener.NotifyEvent event) {
         if (event == NotifyListener.NotifyEvent.CHILD_ADDED) {
+            if (isFakeAdd(registerMeta, sequenceNum)) {
+                log.debug("It is a fake add event : {}", event);
+                return;
+            }
             log.info("service {} has a new provider.provider address is {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
             //拿到与该提供者的channel，如果没有与这个提供者的channel则创建
-            connectorManager.addConnectionWithProvider(registerMeta.getAppName(),
-                    registerMeta.getAddress(),
-                    registerMeta.getServiceMeta());
+            connectorManager.addConnection(registerMeta);
 
             lock.lock();
             try {
@@ -48,12 +52,13 @@ public class ServiceNotifyListener implements NotifyListener {
             }
 
         } else if (event == NotifyListener.NotifyEvent.CHILD_REMOVED) {
+            if (isFakeRemove(registerMeta, sequenceNum)) {
+                log.debug("It is a fake remove event : {}", event);
+                return;
+            }
             log.info("service {} reduced a provider.provider address was {}", registerMeta.getServiceMeta(), registerMeta.getAddress());
 
-            connectorManager.removeConnectionWithProvider(registerMeta.getAppName(),
-                    registerMeta.getAddress(),
-                    registerMeta.getServiceMeta());
-
+            connectorManager.removeConnection(registerMeta);
         }
     }
 
@@ -81,6 +86,30 @@ public class ServiceNotifyListener implements NotifyListener {
         }
 
         return available || connectorManager.isAvailable(serviceMeta);
+    }
+
+    private Map<RegisterMeta, Long> xorMap = new ConcurrentHashMap<>();
+
+    private boolean isFakeAdd(RegisterMeta meta, long sequenceNum) {
+        Long xor = xorMap.get(meta);
+        if (xor == null) {
+            xor = xorMap.putIfAbsent(meta, 0l);
+            if (xor == null) xor = 0l;
+        }
+        boolean isTrue = xor == 0;
+        xorMap.put(meta, xor ^ sequenceNum);
+        return !isTrue;
+    }
+
+    private boolean isFakeRemove(RegisterMeta meta, long sequenceNum) {
+        Long xor = xorMap.get(meta);
+        if (xor == null) {
+            xor = xorMap.putIfAbsent(meta, 0l);
+            if (xor == null) xor = 0l;
+        }
+        boolean isTrue = (xor ^ sequenceNum) == 0;
+        xorMap.put(meta, xor ^ sequenceNum);
+        return !isTrue;
     }
 
 

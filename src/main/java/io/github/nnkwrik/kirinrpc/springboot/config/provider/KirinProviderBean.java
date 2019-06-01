@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.net.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,20 +57,23 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
         this.serviceContainer = new ServiceBeanContainer();
         Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(KirinProvideService.class);
         if (serviceBeanMap == null || serviceBeanMap.isEmpty()) return;
-        //放入提供者容器
-        List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(serviceBeanMap.values());
 
         //创建远程注册中心连接
         registryClient = RegistryFactory.getConnectedInstance(providerConfig.getRegistryAddress());
 
-        List<RegisterMeta> registerMetas = serviceMetas.stream()
-                .map(s -> {
-                    RegisterMeta.Address address =
-                            new RegisterMeta.Address(serverAddress.getAddress().getHostAddress(), serverAddress.getPort());
-                    return new RegisterMeta(providerConfig.getName(), address, s);
-                })
-                .collect(Collectors.toList());
-
+        List<RegisterMeta> registerMetas = new ArrayList<>();
+        for (Object serviceBean : serviceBeanMap.values()) {
+            //放入提供者容器
+            List<ServiceMeta> serviceMetas = serviceContainer.addServiceBean(serviceBean);
+            int wight = serviceBean.getClass().getAnnotation(KirinProvideService.class).wight();
+            serviceMetas.stream()
+                    .map(s -> {
+                        RegisterMeta.Address address =
+                                new RegisterMeta.Address(serverAddress.getAddress().getHostAddress(), serverAddress.getPort());
+                        return new RegisterMeta(providerConfig.getName(), wight, address, s);
+                    })
+                    .forEach(registerMetas::add);
+        }
 
         //注册到远程
         registryClient.register(registerMetas);

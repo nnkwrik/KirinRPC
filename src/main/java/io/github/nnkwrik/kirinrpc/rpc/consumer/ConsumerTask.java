@@ -40,17 +40,15 @@ public class ConsumerTask implements Runnable {
         if (result instanceof KirinRemoteException
                 && ((KirinRemoteException) result).getStatus() == Status.SERVICE_UNEXPECTED_ERROR) {
 
-            receiver.receiveErrorResponse(channel, responsePayload.id(), response.getProviderName(),
-                    (KirinRemoteException) result);
+            receiver.receiveErrorResponse(channel, responsePayload.id(), (KirinRemoteException) result);
 
         } else if (result instanceof KirinRemoteException) {
 
-            receiver.receiveFailResponse(channel, responsePayload.id(), response.getProviderName(),
-                    (KirinRemoteException) result);
+            receiver.receiveFailResponse(channel, responsePayload.id(), (KirinRemoteException) result);
 
         } else {
 
-            receiver.receiveSuccessResponse(channel, responsePayload.id(), response.getProviderName(), result);
+            receiver.receiveSuccessResponse(channel, responsePayload.id(), result);
 
         }
     }

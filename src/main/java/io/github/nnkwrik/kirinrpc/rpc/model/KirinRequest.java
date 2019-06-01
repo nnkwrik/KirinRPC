@@ -11,8 +11,6 @@ import java.io.Serializable;
 @Data
 public class KirinRequest implements Serializable {
 
-    private String providerName;
-
     private ServiceMeta serviceMeta;
 
     private String methodName;

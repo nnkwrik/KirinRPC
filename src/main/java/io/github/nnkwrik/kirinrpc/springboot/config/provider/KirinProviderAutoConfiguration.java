@@ -64,7 +64,7 @@ public class KirinProviderAutoConfiguration {
                 name = providerAnnotationConfig.name();
                 if (StringUtils.isEmpty(name)) {
                     //生成随机的name
-                    name = "provider-" + UUID.randomUUID();
+                    name = "kirin-provider";
                 }
                 config.setName(name);
             }

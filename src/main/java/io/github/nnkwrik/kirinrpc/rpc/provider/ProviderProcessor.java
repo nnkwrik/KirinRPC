@@ -83,7 +83,6 @@ public class ProviderProcessor implements RequestProcessor {
         public void sendSuccessResponse(Channel channel, long requestId, long requestTime, java.lang.Object invokeResult) {
             log.info("Success to invoke provider (requestId = {}), result = [{}].", requestId, invokeResult.toString());
             KirinResponse response = new KirinResponse();
-            response.setProviderName(System.getProperty("kirin.provider.name"));
             response.setResult(invokeResult);
 
             ResponsePayload responsePayload = new ResponsePayload(requestId);
@@ -107,7 +106,6 @@ public class ProviderProcessor implements RequestProcessor {
                     requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
-            response.setProviderName(System.getProperty("kirin.provider.name"));
             response.setError(e);
 
             ResponsePayload responsePayload = new ResponsePayload(requestId);
@@ -125,7 +123,6 @@ public class ProviderProcessor implements RequestProcessor {
                     requestId, StackTraceUtil.stackTrace(e));
 
             KirinResponse response = new KirinResponse();
-            response.setProviderName(System.getProperty("kirin.provider.name"));
             e.setStatus(Status.SERVICE_UNEXPECTED_ERROR);//强制设为SERVICE_UNEXPECTED_ERROR
             response.setError(e);
 

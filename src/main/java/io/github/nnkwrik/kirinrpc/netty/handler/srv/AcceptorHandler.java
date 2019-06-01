@@ -4,6 +4,7 @@ import io.github.nnkwrik.kirinrpc.common.util.StackTraceUtil;
 import io.github.nnkwrik.kirinrpc.netty.IdealStateException;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.rpc.provider.ProviderProcessor;
+import io.github.nnkwrik.kirinrpc.rpc.provider.RequestProcessor;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,10 +24,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ChannelHandler.Sharable
 public class AcceptorHandler extends ChannelInboundHandlerAdapter {
 
-    private final ProviderProcessor processor;
+    private final RequestProcessor processor;
 
 
-    public AcceptorHandler(ProviderProcessor processor) {
+    public AcceptorHandler(RequestProcessor processor) {
         this.processor = processor;
     }
 

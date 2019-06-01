@@ -1,10 +1,11 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer.cluster;
 
+import io.github.nnkwrik.kirinrpc.netty.cli.KChannel;
 import io.github.nnkwrik.kirinrpc.netty.model.RequestPayload;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.invoker.RPCFuture;
 import io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer.LoadBalancer;
 import io.github.nnkwrik.kirinrpc.rpc.model.KirinRequest;
-import io.netty.channel.Channel;
+import io.github.nnkwrik.kirinrpc.serializer.SerializerHolder;
 
 import java.util.concurrent.ExecutionException;
 
@@ -30,6 +31,8 @@ public class FailoverClusterInvoker extends AbstractClusterInvoker {
     @Override
     public <T> RPCFuture<T> invoke(KirinRequest request) throws ExecutionException, InterruptedException {
         RequestPayload payload = new RequestPayload(newId());
+        byte[] bytes = SerializerHolder.serializerImpl().writeObject(request);
+        payload.bytes(bytes);
 
         return doInvoke(payload, request, retries, null);
     }
@@ -37,15 +40,19 @@ public class FailoverClusterInvoker extends AbstractClusterInvoker {
     private <T> RPCFuture<T> doInvoke(RequestPayload payload,
                                       KirinRequest request,
                                       int remain,
-                                      RPCFuture<T> lasFuture) throws ExecutionException, InterruptedException {
-        if (remain < 0) return lasFuture;
-        Channel chanel = select(payload, request);
-        RPCFuture future = write(chanel, payload);
-        future.get();
-        switch (future.status()) {
-            case SUCCESS:
-                return future;
+                                      RPCFuture<T> lastFuture) throws ExecutionException, InterruptedException {
+        if (remain < 0) return lastFuture;
+
+        if (lastFuture != null) {
+            lastFuture.get();
+            switch (lastFuture.status()) {
+                case SUCCESS:
+                    return lastFuture;
+            }
         }
+        KChannel chanel = loadBalancer.select(request.getServiceMeta());
+        RPCFuture future = chanel.write(payload);
+
         return doInvoke(payload, request, remain - 1, future);
     }
 

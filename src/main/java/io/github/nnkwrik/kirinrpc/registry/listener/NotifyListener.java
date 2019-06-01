@@ -7,7 +7,7 @@ import io.github.nnkwrik.kirinrpc.registry.model.RegisterMeta;
  * @date 19/05/24 19:54
  */
 public interface NotifyListener {
-    void notify(RegisterMeta registerMeta, NotifyEvent event);
+    void notify(RegisterMeta registerMeta, long sequenceNum, NotifyEvent event);
 
     enum NotifyEvent {
         CHILD_ADDED,

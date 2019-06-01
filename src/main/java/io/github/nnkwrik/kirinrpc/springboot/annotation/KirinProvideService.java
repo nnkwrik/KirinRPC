@@ -19,4 +19,6 @@ public @interface KirinProvideService {
 
     String group() default Constants.ANY_GROUP;
 
+    int wight() default Constants.DEFAULT_WIGHT;
+
 }

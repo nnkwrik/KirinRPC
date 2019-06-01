@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterMeta {
     private String appName;
+    //权重，用于负载均衡
+    private int wight;
     // 地址
     private Address address = new Address();
     // metadata
