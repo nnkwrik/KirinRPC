@@ -26,7 +26,7 @@ public class AsyncInvoker<T> extends AbstractInvoker {
     public Object doInvoke(KirinRequest request) throws ExecutionException, InterruptedException {
         RPCFuture future = clusterInvoker.invoke(request);
 
-        AsyncFutureContext.set(serviceMeta, future);
+        AsyncFutureContext.set(future);
 
         return getTypeDefaultValue(interfaceClass);
     }
