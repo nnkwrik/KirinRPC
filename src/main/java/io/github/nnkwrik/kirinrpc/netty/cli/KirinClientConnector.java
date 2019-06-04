@@ -1,6 +1,6 @@
 package io.github.nnkwrik.kirinrpc.netty.cli;
 
-import io.github.nnkwrik.kirinrpc.ConnectFailedException;
+import io.github.nnkwrik.kirinrpc.rpc.ConnectFailedException;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolDecoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.ProtocolEncoder;
 import io.github.nnkwrik.kirinrpc.netty.handler.cli.ConnectionWatchdog;

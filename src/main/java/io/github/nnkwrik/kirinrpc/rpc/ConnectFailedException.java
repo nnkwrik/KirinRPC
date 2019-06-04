@@ -1,4 +1,4 @@
-package io.github.nnkwrik.kirinrpc;
+package io.github.nnkwrik.kirinrpc.rpc;
 
 /**
  * @author nnkwrik

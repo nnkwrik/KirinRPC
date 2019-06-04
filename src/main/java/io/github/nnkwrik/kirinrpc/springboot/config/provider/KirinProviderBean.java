@@ -19,7 +19,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author nnkwrik
@@ -81,7 +80,7 @@ public class KirinProviderBean implements ApplicationContextAware, InitializingB
 
     private void initServer() throws InterruptedException {
         nettyServerAcceptor = new KirinServerAcceptor(serviceContainer, providerConfig.getProviderPort());
-        nettyServerAcceptor.start();
+        nettyServerAcceptor.start(false);
     }
 
     /**

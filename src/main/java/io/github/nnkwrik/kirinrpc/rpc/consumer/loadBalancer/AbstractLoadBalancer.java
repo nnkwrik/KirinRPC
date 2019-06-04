@@ -1,6 +1,6 @@
 package io.github.nnkwrik.kirinrpc.rpc.consumer.loadBalancer;
 
-import io.github.nnkwrik.kirinrpc.ConnectFailedException;
+import io.github.nnkwrik.kirinrpc.rpc.ConnectFailedException;
 import io.github.nnkwrik.kirinrpc.netty.cli.ConnectorManager;
 import io.github.nnkwrik.kirinrpc.netty.cli.KChannel;
 import io.github.nnkwrik.kirinrpc.rpc.model.ServiceMeta;
