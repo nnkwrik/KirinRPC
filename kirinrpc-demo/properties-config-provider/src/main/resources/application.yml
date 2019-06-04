@@ -1,0 +1,11 @@
+server:
+  port: 9081
+
+kirin:
+  provider:
+    enable: true
+    name: kirin-provider2
+    registry-address: 127.0.0.1:2181
+    provider-address: 127.0.0.1
+    provider-port: 7071
+

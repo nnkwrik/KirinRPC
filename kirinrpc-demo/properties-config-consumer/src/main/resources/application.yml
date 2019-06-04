@@ -1,0 +1,8 @@
+server:
+  port: 9080
+
+kirin:
+  consumer:
+    enable: true
+    name: kirin-consumer2
+    registry-address: 127.0.0.1:2181
