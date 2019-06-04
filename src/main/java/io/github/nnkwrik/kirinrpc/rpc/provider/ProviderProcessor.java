@@ -81,7 +81,7 @@ public class ProviderProcessor implements RequestProcessor {
 
         @Override
         public void sendSuccessResponse(Channel channel, long requestId, long requestTime, java.lang.Object invokeResult) {
-            log.info("Success to invoke provider (requestId = {}), result = [{}].", requestId, invokeResult.toString());
+            log.info("Success to invoke provider (requestId = {}), result = [{}].", requestId, invokeResult);
             KirinResponse response = new KirinResponse();
             response.setResult(invokeResult);
 

@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class RPCFuture<T> implements Future<T> {
 
     private volatile T result;
+    private volatile boolean isDone;
     private volatile Status status = Status.NULL;
 
     private long requestId;
@@ -38,14 +39,14 @@ public class RPCFuture<T> implements Future<T> {
 
     @Override
     public boolean isDone() {
-        return result != null ? true : false;
+        return isDone;
     }
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
         lock.lock();
         try {
-            while (result == null) {
+            while (!isDone) {
                 condition.await();
             }
         } finally {
@@ -60,7 +61,7 @@ public class RPCFuture<T> implements Future<T> {
         lock.lock();
         try {
             while ((remain = condition.awaitNanos(remain)) <= 0) {
-                if (result != null) {
+                if (!isDone) {
                     break;
                 }
             }
@@ -72,12 +73,17 @@ public class RPCFuture<T> implements Future<T> {
 
     public void done(T result) {
         this.result = result;
+        isDone = true;
         lock.lock();
         try {
             condition.signalAll();
         } finally {
             lock.unlock();
         }
+    }
+
+    public long id(){
+        return requestId;
     }
 
     public void status(Status status) {

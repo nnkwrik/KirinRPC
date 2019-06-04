@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 如果60秒没有收到心跳包，则抛出异常
+ *
  * @author nnkwrik
  * @date 19/04/30 9:27
  */
@@ -24,7 +25,7 @@ public class AcceptorIdealStateTrigger extends ChannelInboundHandlerAdapter {
                 /**
                  * 60秒都没有收到心跳包.
                  */
-                throw new IdealStateException("Did not receive heartbeat over 60 seconds.");
+                throw new IdealStateException("Did not receive heartbeat over 60 seconds." + ctx.channel());
             }
         } else {
             super.userEventTriggered(ctx, evt);

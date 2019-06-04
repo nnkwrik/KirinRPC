@@ -49,7 +49,7 @@ public class ProtocolDecoder extends ReplayingDecoder<ProtocolDecoder.State> {
             case BODY:
                 switch (header.sign()) {
                     case HEARTBEAT:
-                        log.debug("Receive heartBeat package");
+                        log.debug("Receive heartBeat package.{}",channelHandlerContext.channel());
                         break;
                     case REQUEST: {
                         byte[] bytes = new byte[header.bodyLength()];
