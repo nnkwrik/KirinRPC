@@ -41,8 +41,12 @@ public class ServiceBeanContainer implements ProviderLookup {
             log.info("Loading service: {} ,addressChannel : {}", serviceName, serviceGroup);
             ServiceMeta serviceMeta = new ServiceMeta(serviceName, serviceGroup);
             String serviceKey = serviceGroup + "/" + serviceName;
-            serviceBeans.put(serviceKey, serviceBean);
-            serviceMetaList.add(serviceMeta);
+            if (serviceBeans.putIfAbsent(serviceKey, serviceBean) != null) {
+                log.warn("Already have instance for service(serviceName={} ,group={}).The instance is {},can't overwrite by {}.",
+                        serviceName, serviceGroup, serviceBeans.get(serviceKey), serviceBean);
+            } else {
+                serviceMetaList.add(serviceMeta);
+            }
         });
         return serviceMetaList;
     }

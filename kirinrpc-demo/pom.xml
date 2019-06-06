@@ -18,10 +18,13 @@
         <module>annotation-config-provider</module>
         <module>properties-config-consumer</module>
         <module>properties-config-provider</module>
+        <module>benchmark</module>
     </modules>
 
     <properties>
         <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
+        <opentracing.version>0.31.0</opentracing.version>
+        <jmh.version>1.20</jmh.version>
     </properties>
 
     <dependencyManagement>

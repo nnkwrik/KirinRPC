@@ -5,6 +5,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
+ * 通过注解配置消费者信息
+ * 启动前先确保registry address下存在zookeeper服务器
+ *
  * @author nnkwrik
  * @date 19/05/22 14:50
  */

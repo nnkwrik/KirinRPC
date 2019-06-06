@@ -1,8 +1,10 @@
 package demo.consumer;
 
+import demo.api.EchoService;
 import demo.api.HelloWorldService;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinConsumeService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -12,8 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ConsumerController {
 
+    @KirinConsumeService(group = "group1")
+    private HelloWorldService helloWorldService;
+
+    @KirinConsumeService(group = "group2")
+    private HelloWorldService helloWorldService2;
+
     @KirinConsumeService
-    HelloWorldService helloWorldService;
+    private EchoService echoService;
 
     @GetMapping("/hello")
     public String testConsumer() {
@@ -22,7 +30,13 @@ public class ConsumerController {
 
     @GetMapping("/world")
     public String testConsumer2() {
-        return helloWorldService.sayWorld("jenny");
+        return helloWorldService2.sayWorld("jenny");
     }
+
+    @GetMapping("/echo/{words}")
+    public String echo(@PathVariable("words") String words) {
+        return echoService.echo(words);
+    }
+
 
 }
