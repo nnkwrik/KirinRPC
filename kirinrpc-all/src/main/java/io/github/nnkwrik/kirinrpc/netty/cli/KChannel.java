@@ -97,26 +97,6 @@ public class KChannel {//装了一些权限以及预热
         return kChannel;
     }
 
-//    public <T> RPCFuture<T> write(RequestPayload payload) {
-//
-//        CountDownLatch latch = new CountDownLatch(1);
-//
-//        channel.writeAndFlush(payload).addListener(new ChannelFutureListener() {
-//            @Override
-//            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-//                latch.countDown();
-//            }
-//        });
-//
-//        try {
-//            latch.await();
-//            return new RPCFuture(payload.id());
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
     public <T> RPCFuture<T> write(RequestPayload payload) {
         RPCFuture rpcFuture = new RPCFuture(payload.id());
         channel.writeAndFlush(payload).addListener(new ChannelFutureListener() {
