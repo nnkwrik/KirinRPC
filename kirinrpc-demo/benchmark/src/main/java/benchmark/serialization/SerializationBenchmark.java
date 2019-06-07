@@ -1,4 +1,4 @@
-package benchmark.serialication;
+package benchmark.serialization;
 
 import com.google.common.collect.Lists;
 import io.github.nnkwrik.kirinrpc.serializer.Serializer;
