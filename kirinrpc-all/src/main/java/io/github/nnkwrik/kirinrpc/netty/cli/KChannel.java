@@ -12,7 +12,6 @@ import io.netty.channel.ChannelFutureListener;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author nnkwrik
@@ -98,24 +97,38 @@ public class KChannel {//装了一些权限以及预热
         return kChannel;
     }
 
+//    public <T> RPCFuture<T> write(RequestPayload payload) {
+//
+//        CountDownLatch latch = new CountDownLatch(1);
+//
+//        channel.writeAndFlush(payload).addListener(new ChannelFutureListener() {
+//            @Override
+//            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//                latch.countDown();
+//            }
+//        });
+//
+//        try {
+//            latch.await();
+//            return new RPCFuture(payload.id());
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
+
     public <T> RPCFuture<T> write(RequestPayload payload) {
-
-        CountDownLatch latch = new CountDownLatch(1);
-
+        RPCFuture rpcFuture = new RPCFuture(payload.id());
         channel.writeAndFlush(payload).addListener(new ChannelFutureListener() {
             @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                latch.countDown();
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    rpcFuture.sent(true);
+                }
             }
         });
 
-        try {
-            latch.await();
-            return new RPCFuture(payload.id());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return rpcFuture;
     }
 
 }

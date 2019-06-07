@@ -58,7 +58,7 @@ public class ConsumerProcessor implements ResponseProcessor {
         @Override
         public void receiveSuccessResponse(Channel channel, long requestId, Object result) {
             log.debug("Receive success response for [requestId = {}],result is {}.", requestId, result);
-            RPCFuture future = RPCFuture.sentMsg.remove(requestId);
+            RPCFuture future = RPCFuture.received(requestId);
             if (future != null) {
                 future.status(RPCFuture.Status.SUCCESS);
                 future.done(result);
@@ -68,7 +68,7 @@ public class ConsumerProcessor implements ResponseProcessor {
         @Override
         public void receiveFailResponse(Channel channel, long requestId, KirinRemoteException e) {
             log.debug("Receive fail response for [requestId = {}],exception is {}.", requestId, e);
-            RPCFuture future = RPCFuture.sentMsg.remove(requestId);
+            RPCFuture future = RPCFuture.received(requestId);
             if (future != null) {
                 future.status(RPCFuture.Status.FAIL);
                 future.done(e);
@@ -79,7 +79,7 @@ public class ConsumerProcessor implements ResponseProcessor {
         public void receiveErrorResponse(Channel channel, long requestId, KirinRemoteException e) {
             log.debug("Receive error response for [requestId = {}],error is {}.", requestId, e);
             ConnectorManager.getInstance().removeInactiveConnection(channel);
-            RPCFuture future = RPCFuture.sentMsg.remove(requestId);
+            RPCFuture future = RPCFuture.received(requestId);
             if (future != null) {
                 future.status(RPCFuture.Status.ERROR);
                 future.done(e);

@@ -11,15 +11,20 @@ public class AsyncFutureContext {
     private static ThreadLocal<RPCFuture> asyncFuture = new ThreadLocal<>();
 
     public static Object get() throws ExecutionException, InterruptedException {
-        RPCFuture future = asyncFuture.get();
-        if (future == null) {
-            throw new NullPointerException("Can't find async invoke future in context.");
-        }
+        RPCFuture future = getFuture();
         return future.get();
     }
 
     public static <T> T get(Class<T> returnType) throws ExecutionException, InterruptedException {
         return returnType.cast(get());
+    }
+
+    public static RPCFuture getFuture() {
+        RPCFuture future = asyncFuture.get();
+        if (future == null) {
+            throw new NullPointerException("Can't find async invoke future in context.");
+        }
+        return future;
     }
 
     public static void set(RPCFuture future) {

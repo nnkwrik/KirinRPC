@@ -13,19 +13,26 @@ public class RPCFuture<T> implements Future<T> {
 
     private volatile T result;
     private volatile boolean isDone;
+    private volatile boolean isSent;
     private volatile Status status = Status.NULL;
 
     private long requestId;
 
-    public static final Map<Long, RPCFuture> sentMsg = new ConcurrentHashMap<>();
+    private static final Map<Long, RPCFuture> sentMsg = new ConcurrentHashMap<>();
 
     private ReentrantLock lock = new ReentrantLock();
     private Condition condition = lock.newCondition();
 
     public RPCFuture(long requestId) {
         this.requestId = requestId;
-        sentMsg.put(requestId,this);
+        sentMsg.put(requestId, this);
     }
+
+
+    public static RPCFuture received(long requestId) {
+        return sentMsg.remove(requestId);
+    }
+
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
@@ -82,7 +89,15 @@ public class RPCFuture<T> implements Future<T> {
         }
     }
 
-    public long id(){
+    public void sent(boolean isSent) {
+        this.isSent = isSent;
+    }
+
+    public boolean isSent(){
+        return isSent;
+    }
+
+    public long id() {
         return requestId;
     }
 
@@ -90,7 +105,7 @@ public class RPCFuture<T> implements Future<T> {
         this.status = status;
     }
 
-    public Status status(){
+    public Status status() {
         return status;
     }
 
