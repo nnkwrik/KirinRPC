@@ -11,7 +11,7 @@
     	<img src="https://img.shields.io/github/stars/nnkwrik/KirinRPC.svg"/>
     </a>
     <a href="#">
-    	<img src="	https://img.shields.io/github/forks/nnkwrik/KirinRPC.svg"/>
+    	<img src="https://img.shields.io/github/forks/nnkwrik/KirinRPC.svg"/>
     </a>
 </p>
 
