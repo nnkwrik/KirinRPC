@@ -1,5 +1,20 @@
 # Kirin RPC
 
+<p>
+     <a href="https://travis-ci.com/nnkwrik/incubator-KirinRPC">
+        <img src="https://travis-ci.com/nnkwrik/incubator-KirinRPC.svg?branch=master"/>
+    </a>
+    <a href="https://opensource.org/licenses/MIT">
+    	<img src="https://img.shields.io/badge/License-MIT-lightgrey.svg"/>
+    </a>  
+    <a href="#">
+    	<img src="https://img.shields.io/github/stars/nnkwrik/KirinRPC.svg"/>
+    </a>
+    <a href="#">
+    	<img src="	https://img.shields.io/github/forks/nnkwrik/KirinRPC.svg"/>
+    </a>
+</p>
+
 一款玩票性质的RPC框架。
 
 ![1559891532907](assets/1559891532907.png)
@@ -125,4 +140,10 @@ Intel® Core™ i5-8250U CPU @ 1.60GHz × 8
 ```
 [AsyncInvoke Benchmark] Request count: 1024000, time: 12 second, qps: 85333
 ```
+
+## 相关项目
+
+- [Jupiter](https://github.com/fengjiachun/Jupiter)
+- [Dubbo](https://github.com/apache/dubbo)
+- [NettyRpc](https://github.com/luxiaoxun/NettyRpc)
 
