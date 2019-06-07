@@ -19,6 +19,8 @@
   - RandomLoadBalance : 基于权重随机算法
 - 面向注解，面向Spring Boot
 
+**想了解关于框架机制的老哥可以参考[wiki](https://github.com/nnkwrik/KirinRPC/wiki/%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)**
+
 ## 简单示例
 
 ### Provider
