@@ -1,4 +1,4 @@
-package provider.service;
+package demo.provider.service;
 
 import demo.api.HelloWorldService;
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvideService;

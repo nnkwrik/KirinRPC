@@ -1,4 +1,4 @@
-package provider;
+package demo.provider;
 
 import io.github.nnkwrik.kirinrpc.springboot.annotation.KirinProvider;
 import org.springframework.boot.SpringApplication;

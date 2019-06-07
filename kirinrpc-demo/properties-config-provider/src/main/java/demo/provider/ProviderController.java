@@ -1,4 +1,4 @@
-package provider;
+package demo.provider;
 
 import demo.api.EchoService;
 import org.springframework.beans.factory.annotation.Autowired;
