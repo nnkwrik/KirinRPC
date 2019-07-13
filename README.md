@@ -1,7 +1,7 @@
 # Kirin RPC
 
 <p>
-     <a href="https://travis-ci.com/nnkwrik/incubator-KirinRPC">
+     <a href="https://travis-ci.com/nnkwrik/KirinRPC">
         <img src="https://travis-ci.com/nnkwrik/incubator-KirinRPC.svg?branch=master"/>
     </a>
     <a href="https://opensource.org/licenses/MIT">
