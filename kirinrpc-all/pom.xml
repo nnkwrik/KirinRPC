@@ -16,7 +16,7 @@
         <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
         <curator.version>2.9.1</curator.version>
         <zookeeper.version>3.4.14</zookeeper.version>
-        <protobuf.versoin>3.6.1</protobuf.versoin>
+        <protobuf.versoin>3.16.3</protobuf.versoin>
         <protostuff.versoin>1.6.0</protostuff.versoin>
         <objenesis.versoin>3.0.1</objenesis.versoin>
         <jackson.versoin>2.9.8</jackson.versoin>
